@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 
-import { fetchBoard, reorderColumns, createColumn as apiCreateColumn, createCard as apiCreateCard, moveCard as apiMoveCard } from "./api";
+import {
+  fetchBoard,
+  reorderColumns,
+  createColumn as apiCreateColumn,
+  createCard as apiCreateCard,
+  moveCard as apiMoveCard,
+} from "./api";
 import { useBoardStore } from "./state";
 import Column from "./Column";
 import CardOverlay from "./CardOverlay";
@@ -106,10 +112,9 @@ export default function BoardClient() {
     setNewColumnName("");
   }
 
-  async function onCreateCard(columnId: string) {
-    const title = prompt("Card title?");
-    if (!title?.trim()) return;
-    await apiCreateCard(columnId, title.trim());
+  async function onCreateCard(columnId: string, title: string) {
+    if (!title.trim()) return;
+    await apiCreateCard({ columnId, title: title.trim() });
     const b = await fetchBoard();
     setBoard(b);
   }
@@ -260,7 +265,7 @@ export default function BoardClient() {
                 key={col.id}
                 boardId={filteredBoard.id}
                 column={col}
-                onCreateCard={() => onCreateCard(col.id)}
+                onCreateCard={(title) => onCreateCard(col.id, title)}
                 onSelectCard={(id) => selectCard(id)}
               />
             ))}

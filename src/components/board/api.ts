@@ -26,13 +26,37 @@ export async function reorderColumns(boardId: string, orderedColumnIds: string[]
   return res.json();
 }
 
-export async function createCard(columnId: string, title: string) {
+export async function createCard(payload: {
+  columnId: string;
+  title: string;
+  description?: string;
+  tags?: string[];
+  priority?: string;
+  dueDate?: string | null;
+}) {
   const res = await fetch("/api/cards", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ columnId, title }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Failed to create card");
+  return res.json();
+}
+
+export async function updateCard(payload: {
+  id: string;
+  title?: string;
+  description?: string;
+  tags?: string[];
+  priority?: string;
+  dueDate?: string | null;
+}) {
+  const res = await fetch("/api/cards", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update card");
   return res.json();
 }
 

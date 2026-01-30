@@ -1,11 +1,85 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
   provider = "sqlite"
 }
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum CardActivityType {
+  CREATED
+  EDITED
+  MOVED
+  ARCHIVED
+  UNARCHIVED
+}
+
+model Board {
+  id         String   @id @default(cuid())
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  columns    Column[]
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  boardId   String
+  name      String
+  order     Int
+  wipLimit  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards     Card[]
+
+  @@index([boardId, order])
+}
+
+model Card {
+  id          String    @id @default(cuid())
+  columnId    String
+  order       Int
+
+  title       String
+  description String    @default("")
+  tags        Json?     // string[] stored as JSON
+  priority    Priority  @default(MEDIUM)
+  dueDate     DateTime?
+
+  archived    Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  activities  CardActivity[]
+
+  @@index([columnId, archived, order])
+  @@index([title])
+}
+
+model CardActivity {
+  id         String           @id @default(cuid())
+  cardId     String
+  type       CardActivityType
+  actor      String
+  timestamp  DateTime         @default(now())
+  before     Json?
+  after      Json?
+
+  card       Card             @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, timestamp])
+}
+

@@ -268,8 +268,18 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                   ) : (
                     activity.map((a) => {
                       const isEdited = a.type === "EDITED";
+                      const isMoved = a.type === "MOVED";
                       const changed = isEdited ? (a.before ?? {}) : null;
                       const changedEntries = isEdited ? (Object.entries(changed) as Array<[string, any]>) : [];
+
+                      const fromColId = isMoved ? a.before?.columnId : null;
+                      const toColId = isMoved ? a.after?.columnId : null;
+                      const fromColName = fromColId
+                        ? board?.columns.find((c) => c.id === fromColId)?.name ?? fromColId
+                        : null;
+                      const toColName = toColId
+                        ? board?.columns.find((c) => c.id === toColId)?.name ?? toColId
+                        : null;
 
                       return (
                         <div
@@ -295,6 +305,11 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                                 ))}
                               </div>
                             )
+                          ) : isMoved ? (
+                            <div className="mt-2 text-xs text-zinc-300">
+                              Moved: <span className="text-zinc-200">{fromColName}</span> →{" "}
+                              <span className="text-zinc-200">{toColName}</span>
+                            </div>
                           ) : (
                             <>
                               {a.before ? (

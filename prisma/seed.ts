@@ -84,7 +84,7 @@ async function main() {
         cardId: created.id,
         type: CardActivityType.CREATED,
         actor: "Cole",
-        before: null,
+        before: undefined,
         after: {
           title: created.title,
           description: created.description,

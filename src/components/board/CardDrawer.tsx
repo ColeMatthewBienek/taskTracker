@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { Priority } from "@prisma/client";
 import type { CardDTO } from "@/server/types";
-import { fetchBoard, fetchCardActivity, setCardArchived, updateCard } from "./api";
+import { fetchCardActivity, setCardArchived, updateCard } from "./api";
 import { useBoardStore } from "./state";
 
 function asArray(value: unknown): any[] {
@@ -32,7 +32,7 @@ function toDatetimeLocal(iso: string | null) {
 
 export default function CardDrawer(props: { cardId: string | null; onClose: () => void }) {
   const { cardId } = props;
-  const { board, setBoard } = useBoardStore();
+  const { board, upsertCardLocal } = useBoardStore();
   const [activity, setActivity] = useState<any[] | null>(null);
 
   const [editTitle, setEditTitle] = useState("");
@@ -78,9 +78,8 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
 
   async function toggleArchived() {
     if (!card) return;
-    await setCardArchived(card.id, !card.archived);
-    const b = await fetchBoard();
-    setBoard(b);
+    const updated = await setCardArchived(card.id, !card.archived);
+    upsertCardLocal(updated);
     const acts = await fetchCardActivity(card.id);
     setActivity(acts);
   }
@@ -93,7 +92,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
       const tags = editTagsArr;
       const dueDateIso = editDueDate ? new Date(editDueDate).toISOString() : null;
 
-      await updateCard({
+      const updated = await updateCard({
         id: card.id,
         title: editTitle.trim(),
         description: editDescription,
@@ -102,8 +101,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
         dueDate: dueDateIso,
       });
 
-      const b = await fetchBoard();
-      setBoard(b);
+      upsertCardLocal(updated);
       const acts = await fetchCardActivity(card.id);
       setActivity(acts);
     } catch (e: any) {

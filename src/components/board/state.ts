@@ -14,6 +14,10 @@ type BoardState = {
   selectCard: (id: string | null) => void;
 
   // local updates
+  addColumnLocal: (col: Omit<ColumnDTO, "cards"> & { cards?: CardDTO[] }) => void;
+  addCardLocal: (card: CardDTO) => void;
+  upsertCardLocal: (card: Partial<CardDTO> & { id: string }) => void;
+
   reorderColumnsLocal: (orderedColumnIds: string[]) => void;
   reorderCardsLocal: (columnId: string, orderedCardIds: string[]) => void;
   moveCardLocal: (cardId: string, fromColumnId: string, toColumnId: string, toIndex: number) => void;
@@ -30,6 +34,82 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   setError: (msg) => set({ error: msg }),
 
   selectCard: (id) => set({ selectedCardId: id }),
+
+  addColumnLocal: (col) => {
+    const board = get().board;
+    if (!board) return;
+    const exists = board.columns.some((c) => c.id === col.id);
+    if (exists) return;
+
+    const next: ColumnDTO = {
+      ...(col as any),
+      cards: col.cards ?? [],
+    };
+
+    const cols = [...board.columns, next].sort((a, b) => a.order - b.order);
+    set({ board: { ...board, columns: cols } });
+  },
+
+  addCardLocal: (card) => {
+    const board = get().board;
+    if (!board) return;
+
+    const cols = board.columns.map((c) => {
+      if (c.id !== card.columnId) return c;
+      const exists = c.cards.some((x) => x.id === card.id);
+      if (exists) return c;
+      const cards = [...c.cards, card].sort((a, b) => a.order - b.order);
+      return { ...c, cards };
+    });
+
+    set({ board: { ...board, columns: cols } });
+  },
+
+  upsertCardLocal: (patch) => {
+    const board = get().board;
+    if (!board) return;
+
+    let found = false;
+    let movedFrom: string | null = null;
+
+    const cols1 = board.columns.map((c) => {
+      const idx = c.cards.findIndex((x) => x.id === patch.id);
+      if (idx === -1) return c;
+      found = true;
+
+      const current = c.cards[idx];
+      const next = { ...current, ...patch } as CardDTO;
+
+      // if columnId changes, remove from old column and insert later
+      if (next.columnId !== c.id) {
+        movedFrom = c.id;
+        const cards = c.cards.filter((x) => x.id !== patch.id);
+        return { ...c, cards };
+      }
+
+      const cards = c.cards.slice();
+      cards[idx] = next;
+      return { ...c, cards: cards.sort((a, b) => a.order - b.order) };
+    });
+
+    let cols2 = cols1;
+    if (found) {
+      // If it moved columns, insert into the new one
+      const toColumnId = (patch as any).columnId as string | undefined;
+      if (toColumnId && toColumnId !== movedFrom) {
+        cols2 = cols1.map((c) => {
+          if (c.id !== toColumnId) return c;
+          const current = c.cards.find((x) => x.id === patch.id);
+          if (current) return c;
+          // best-effort: patch might be partial, but should include enough for display
+          const next = patch as any as CardDTO;
+          return { ...c, cards: [...c.cards, next].sort((a, b) => a.order - b.order) };
+        });
+      }
+    }
+
+    set({ board: { ...board, columns: cols2 } });
+  },
 
   reorderColumnsLocal: (orderedColumnIds) => {
     const board = get().board;

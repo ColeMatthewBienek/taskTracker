@@ -21,7 +21,21 @@ function getDragType(activeId: string): "column" | "card" {
 }
 
 export default function BoardClient() {
-  const { board, loading, error, setBoard, setLoading, setError, reorderColumnsLocal, moveCardLocal, reorderCardsLocal, selectedCardId, selectCard } = useBoardStore();
+  const {
+    board,
+    loading,
+    error,
+    setBoard,
+    setLoading,
+    setError,
+    addColumnLocal,
+    addCardLocal,
+    reorderColumnsLocal,
+    moveCardLocal,
+    reorderCardsLocal,
+    selectedCardId,
+    selectCard,
+  } = useBoardStore();
 
   const [newColumnName, setNewColumnName] = useState("");
   const [search, setSearch] = useState("");
@@ -105,18 +119,15 @@ export default function BoardClient() {
   async function onCreateColumn() {
     if (!newColumnName.trim()) return;
     if (!board) return;
-    await apiCreateColumn(board.id, newColumnName.trim());
-    // reload board (simple)
-    const b = await fetchBoard();
-    setBoard(b);
+    const col = await apiCreateColumn(board.id, newColumnName.trim());
+    addColumnLocal({ ...col, cards: [] });
     setNewColumnName("");
   }
 
   async function onCreateCard(columnId: string, title: string) {
     if (!title.trim()) return;
-    await apiCreateCard({ columnId, title: title.trim() });
-    const b = await fetchBoard();
-    setBoard(b);
+    const card = await apiCreateCard({ columnId, title: title.trim() });
+    addCardLocal(card);
   }
 
   function findCard(cardDragId: string) {

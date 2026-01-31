@@ -53,6 +53,51 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
     return null;
   }, [board, cardId]);
 
+  const allTags = useMemo(() => {
+    if (!board) return [] as string[];
+    const s = new Set<string>();
+    for (const col of board.columns) {
+      for (const c of col.cards) {
+        for (const t of c.tags || []) s.add(t);
+      }
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [board]);
+
+  const dirty = useMemo(() => {
+    if (!card) return false;
+
+    const dueIso = editDueDate ? new Date(editDueDate).toISOString() : null;
+
+    const a = {
+      title: editTitle.trim(),
+      description: editDescription ?? "",
+      tags: [...editTagsArr].sort(),
+      priority: editPriority,
+      dueDate: dueIso,
+    };
+
+    const b = {
+      title: card.title,
+      description: card.description ?? "",
+      tags: [...(card.tags ?? [])].sort(),
+      priority: card.priority,
+      dueDate: card.dueDate,
+    };
+
+    return JSON.stringify(a) !== JSON.stringify(b);
+  }, [card, editTitle, editDescription, editTagsArr, editPriority, editDueDate]);
+
+  const tagSuggestions = useMemo(() => {
+    const q = tagDraft.trim().toLowerCase();
+    if (!q) return [] as string[];
+    const have = new Set(editTagsArr.map((t) => t.toLowerCase()));
+    return allTags
+      .filter((t) => !have.has(t.toLowerCase()))
+      .filter((t) => t.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [tagDraft, editTagsArr, allTags]);
+
   useEffect(() => {
     if (!cardId) {
       setActivity(null);
@@ -115,7 +160,16 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
     <Dialog.Root open={!!cardId} onOpenChange={(open) => (!open ? props.onClose() : null)}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60" />
-        <Dialog.Content className="fixed right-0 top-0 h-full w-full max-w-xl border-l border-zinc-800 bg-zinc-950 p-4 shadow-2xl">
+        <Dialog.Content
+          className="fixed right-0 top-0 h-full w-full max-w-xl border-l border-zinc-800 bg-zinc-950 p-4 shadow-2xl"
+          onKeyDown={(e) => {
+            const isSave = (e.ctrlKey || e.metaKey) && e.key === "Enter";
+            if (isSave) {
+              e.preventDefault();
+              if (!saving && dirty && editTitle.trim()) saveEdits();
+            }
+          }}
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <Dialog.Title className="truncate text-lg font-semibold">
@@ -233,6 +287,24 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                         Add
                       </button>
                     </form>
+
+                    {tagSuggestions.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {tagSuggestions.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => {
+                              setEditTagsArr((arr) => (arr.includes(t) ? arr : [...arr, t]));
+                              setTagDraft("");
+                            }}
+                            className="rounded bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200 hover:bg-zinc-700"
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
                   {saveError ? <div className="text-xs text-red-400">{saveError}</div> : null}
@@ -240,11 +312,14 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={saveEdits}
-                      disabled={saving || !editTitle.trim()}
+                      disabled={saving || !editTitle.trim() || !dirty}
                       className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                      title="Ctrl/Cmd + Enter"
                     >
-                      {saving ? "Saving…" : "Save"}
+                      {saving ? "Saving…" : dirty ? "Save" : "Saved"}
                     </button>
+
+                    {dirty ? <span className="text-xs text-zinc-400">Unsaved changes</span> : null}
 
                     <button
                       onClick={toggleArchived}

@@ -26,6 +26,12 @@ export default function CardItem({ card, onClick }: { card: CardDTO; onClick: ()
     transition: sortable.transition,
   };
 
+  const due = card.dueDate ? new Date(card.dueDate) : null;
+  const overdue = due ? due.getTime() < Date.now() && !card.archived : false;
+  const dueLabel = due
+    ? due.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : null;
+
   return (
     <div
       ref={sortable.setNodeRef}
@@ -38,6 +44,23 @@ export default function CardItem({ card, onClick }: { card: CardDTO; onClick: ()
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="truncate text-sm font-medium text-zinc-100">{card.title}</div>
+
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {card.archived ? (
+              <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-300">ARCHIVED</span>
+            ) : null}
+
+            {dueLabel ? (
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] ${
+                  overdue ? "bg-red-500/20 text-red-200" : "bg-zinc-800 text-zinc-200"
+                }`}
+              >
+                Due {dueLabel}
+              </span>
+            ) : null}
+          </div>
+
           {card.description ? (
             <div className="mt-1 line-clamp-2 text-xs text-zinc-400">{card.description}</div>
           ) : null}

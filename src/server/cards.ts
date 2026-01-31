@@ -120,28 +120,75 @@ export async function moveCard(input: unknown) {
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
   await prisma.$transaction(async (tx) => {
-    // move card
+    // Move card first
     await tx.card.update({
       where: { id: data.cardId },
       data: { columnId: data.toColumnId },
     });
 
-    // reorder target column
-    for (let i = 0; i < data.orderedCardIdsInToColumn.length; i++) {
-      await tx.card.update({
-        where: { id: data.orderedCardIdsInToColumn[i] },
-        data: { order: i },
-      });
+    // Reorder helper: take a desired ordering list, intersect with actual ids, de-dupe,
+    // then append any missing ids (by current order) so we always end up with a total ordering.
+    function normalizeOrder(params: {
+      desiredIds: string[] | undefined;
+      actualIdsInOrder: string[];
+    }) {
+      const { desiredIds, actualIdsInOrder } = params;
+      const actual = new Set(actualIdsInOrder);
+
+      const out: string[] = [];
+      const seen = new Set<string>();
+
+      if (desiredIds && desiredIds.length) {
+        for (const id of desiredIds) {
+          if (!actual.has(id)) continue;
+          if (seen.has(id)) continue;
+          seen.add(id);
+          out.push(id);
+        }
+      }
+
+      for (const id of actualIdsInOrder) {
+        if (seen.has(id)) continue;
+        out.push(id);
+      }
+
+      return out;
     }
 
-    // reorder source column if provided
-    if (data.orderedCardIdsInFromColumn) {
-      for (let i = 0; i < data.orderedCardIdsInFromColumn.length; i++) {
-        await tx.card.update({
-          where: { id: data.orderedCardIdsInFromColumn[i] },
-          data: { order: i },
-        });
-      }
+    // Target column: normalize ordering for ACTIVE (non-archived) cards only.
+    const toCards = await tx.card.findMany({
+      where: { columnId: data.toColumnId, archived: false },
+      orderBy: { order: "asc" },
+    });
+
+    const finalToIds = normalizeOrder({
+      desiredIds: data.orderedCardIdsInToColumn,
+      actualIdsInOrder: toCards.map((c) => c.id),
+    });
+
+    for (let i = 0; i < finalToIds.length; i++) {
+      const id = finalToIds[i];
+      if (toCards[i]?.id === id && toCards[i]?.order === i) continue;
+      await tx.card.update({ where: { id }, data: { order: i } });
+    }
+
+    // Source column: always normalize too (close gaps). Use provided ordering if present.
+    const fromCards = await tx.card.findMany({
+      where: { columnId: data.fromColumnId, archived: false },
+      orderBy: { order: "asc" },
+    });
+
+    const fromActualIds = fromCards.map((c) => c.id).filter((id) => id !== data.cardId);
+
+    const finalFromIds = normalizeOrder({
+      desiredIds: data.orderedCardIdsInFromColumn,
+      actualIdsInOrder: fromActualIds,
+    });
+
+    for (let i = 0; i < finalFromIds.length; i++) {
+      const id = finalFromIds[i];
+      if (fromCards[i]?.id === id && fromCards[i]?.order === i) continue;
+      await tx.card.update({ where: { id }, data: { order: i } });
     }
   });
 

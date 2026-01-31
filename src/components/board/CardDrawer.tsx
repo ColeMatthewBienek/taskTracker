@@ -30,10 +30,18 @@ function toDatetimeLocal(iso: string | null) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function formatDueShort(iso: string | null | undefined) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
 export default function CardDrawer(props: { cardId: string | null; onClose: () => void }) {
   const { cardId } = props;
   const { board, upsertCardLocal } = useBoardStore();
   const [activity, setActivity] = useState<any[] | null>(null);
+  const [expandedActivity, setExpandedActivity] = useState<Record<string, boolean>>({});
 
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -342,8 +350,16 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                     activity.map((a) => {
                       const isEdited = a.type === "EDITED";
                       const isMoved = a.type === "MOVED";
+                      const isCreated = a.type === "CREATED";
+                      const isArchived = a.type === "ARCHIVED";
+                      const isUnarchived = a.type === "UNARCHIVED";
+
+                      const expanded = !!expandedActivity[a.id];
+
                       const changed = isEdited ? (a.before ?? {}) : null;
-                      const changedEntries = isEdited ? (Object.entries(changed) as Array<[string, any]>) : [];
+                      const changedEntries = isEdited
+                        ? (Object.entries(changed) as Array<[string, any]>)
+                        : [];
 
                       const fromColId = isMoved ? a.before?.columnId : null;
                       const toColId = isMoved ? a.after?.columnId : null;
@@ -354,16 +370,31 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                         ? board?.columns.find((c) => c.id === toColId)?.name ?? toColId
                         : null;
 
+                      const created = isCreated ? (a.after ?? {}) : null;
+
                       return (
                         <div
                           key={a.id}
                           className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2 py-2"
                         >
-                          <div className="flex items-center justify-between text-xs text-zinc-400">
-                            <span>
+                          <div className="flex items-center justify-between gap-3 text-xs text-zinc-400">
+                            <span className="min-w-0 truncate">
                               <span className="text-zinc-200">{a.actor}</span> · {a.type}
                             </span>
-                            <span>{new Date(a.timestamp).toLocaleString()}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="shrink-0">{new Date(a.timestamp).toLocaleString()}</span>
+                              {!isEdited && !isMoved && !isCreated && !isArchived && !isUnarchived ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedActivity((m) => ({ ...m, [a.id]: !m[a.id] }))
+                                  }
+                                  className="rounded border border-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-200 hover:bg-zinc-900"
+                                >
+                                  {expanded ? "Hide" : "Details"}
+                                </button>
+                              ) : null}
+                            </div>
                           </div>
 
                           {isEdited ? (
@@ -383,7 +414,30 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                               Moved: <span className="text-zinc-200">{fromColName}</span> →{" "}
                               <span className="text-zinc-200">{toColName}</span>
                             </div>
-                          ) : (
+                          ) : isCreated ? (
+                            <div className="mt-2 space-y-1 text-xs text-zinc-300">
+                              <div>
+                                <span className="text-zinc-200">Title</span>: {formatValue(created?.title)}
+                              </div>
+                              <div>
+                                <span className="text-zinc-200">Priority</span>: {formatValue(created?.priority)}
+                              </div>
+                              {asArray(created?.tags).length > 0 ? (
+                                <div>
+                                  <span className="text-zinc-200">Tags</span>: {asArray(created?.tags).join(", ")}
+                                </div>
+                              ) : null}
+                              {created?.dueDate ? (
+                                <div>
+                                  <span className="text-zinc-200">Due</span>: {formatDueShort(created?.dueDate)}
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : isArchived ? (
+                            <div className="mt-2 text-xs text-zinc-300">Archived</div>
+                          ) : isUnarchived ? (
+                            <div className="mt-2 text-xs text-zinc-300">Unarchived</div>
+                          ) : expanded ? (
                             <>
                               {a.before ? (
                                 <pre className="mt-2 max-h-40 overflow-auto text-[11px] text-zinc-300">
@@ -396,6 +450,8 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                                 </pre>
                               ) : null}
                             </>
+                          ) : (
+                            <div className="mt-2 text-xs text-zinc-500">(details hidden)</div>
                           )}
                         </div>
                       );

@@ -15,6 +15,9 @@ type BoardState = {
 
   // local updates
   addColumnLocal: (col: Omit<ColumnDTO, "cards"> & { cards?: CardDTO[] }) => void;
+  updateColumnLocal: (patch: Partial<ColumnDTO> & { id: string }) => void;
+  removeColumnLocal: (id: string) => void;
+
   addCardLocal: (card: CardDTO) => void;
   upsertCardLocal: (card: Partial<CardDTO> & { id: string }) => void;
 
@@ -47,6 +50,21 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     };
 
     const cols = [...board.columns, next].sort((a, b) => a.order - b.order);
+    set({ board: { ...board, columns: cols } });
+  },
+
+  updateColumnLocal: (patch) => {
+    const board = get().board;
+    if (!board) return;
+
+    const cols = board.columns.map((c) => (c.id === patch.id ? ({ ...c, ...patch } as ColumnDTO) : c));
+    set({ board: { ...board, columns: cols } });
+  },
+
+  removeColumnLocal: (id) => {
+    const board = get().board;
+    if (!board) return;
+    const cols = board.columns.filter((c) => c.id !== id);
     set({ board: { ...board, columns: cols } });
   },
 

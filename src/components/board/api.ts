@@ -26,6 +26,26 @@ export async function reorderColumns(boardId: string, orderedColumnIds: string[]
   return res.json();
 }
 
+export async function updateColumn(payload: { id: string; name?: string; wipLimit?: number | null }) {
+  const res = await fetch("/api/columns", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update column");
+  return res.json();
+}
+
+export async function deleteColumn(id: string) {
+  const res = await fetch("/api/columns", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+  if (!res.ok) throw new Error("Failed to delete column");
+  return res.json();
+}
+
 export async function createCard(payload: {
   columnId: string;
   title: string;

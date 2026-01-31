@@ -167,17 +167,48 @@ export async function setCardArchived(input: unknown) {
   const data = ArchiveCardSchema.parse(input);
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
-  const card = await prisma.card.update({
-    where: { id: data.cardId },
-    data: { archived: data.archived },
+  const card = await prisma.$transaction(async (tx) => {
+    if (data.archived) {
+      // Archive the card, then close gaps in the active ordering for that column.
+      const updated = await tx.card.update({
+        where: { id: data.cardId },
+        data: { archived: true },
+      });
+
+      const remaining = await tx.card.findMany({
+        where: { columnId: before.columnId, archived: false },
+        orderBy: { order: "asc" },
+      });
+
+      for (let i = 0; i < remaining.length; i++) {
+        if (remaining[i].order !== i) {
+          await tx.card.update({ where: { id: remaining[i].id }, data: { order: i } });
+        }
+      }
+
+      return updated;
+    }
+
+    // Unarchive: put card at end of active list (max+1) to avoid collisions.
+    const maxOrder = await tx.card.aggregate({
+      where: { columnId: before.columnId, archived: false },
+      _max: { order: true },
+    });
+
+    const nextOrder = (maxOrder._max.order ?? -1) + 1;
+
+    return tx.card.update({
+      where: { id: data.cardId },
+      data: { archived: false, order: nextOrder },
+    });
   });
 
   await logActivity({
     cardId: card.id,
     type: data.archived ? CardActivityType.ARCHIVED : CardActivityType.UNARCHIVED,
     actor: "Cole",
-    before: { archived: before.archived },
-    after: { archived: card.archived },
+    before: { archived: before.archived, order: before.order, columnId: before.columnId },
+    after: { archived: card.archived, order: card.order, columnId: card.columnId },
   });
 
   return card;

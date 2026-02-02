@@ -1,0 +1,10 @@
+name = "tasktracker"
+compatibility_date = "2026-02-01"
+
+# Cloudflare Pages will use this for local dev (`wrangler pages dev`) and bindings.
+# In the Cloudflare dashboard, create a D1 database and bind it as "DB".
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tasktracker"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

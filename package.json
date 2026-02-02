@@ -10,22 +10,29 @@
     "build": "next build",
     "start": "next start -H 127.0.0.1 -p 3000",
     "lint": "eslint",
+
+    "pages:build": "next build && next-on-pages",
+    "pages:dev": "npm run pages:build && wrangler pages dev .vercel/output/static --compatibility-date=2026-02-01",
+
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "setup": "npm run db:reset && npm run db:seed"
+    "setup": "npm run db:reset && npm run db:seed",
+
+    "d1:migrate": "wrangler d1 migrations apply tasktracker --local --migrations-dir=./d1/migrations",
+
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@prisma/adapter-better-sqlite3": "^7.3.0",
+    "@prisma/adapter-d1": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@radix-ui/react-dialog": "^1.1.15",
-    "better-sqlite3": "^12.6.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "next": "16.1.6",
+    "next": "15.5.2",
     "prisma": "^7.3.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -39,9 +46,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^3.109.0",
+    "@cloudflare/next-on-pages": "^1.13.10",
+    "@cloudflare/workers-types": "^4.20250408.0"
   }
 }

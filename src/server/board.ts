@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import type { PrismaClient } from "@prisma/client";
 import type { BoardDTO } from "./types";
 
 function jsonTags(tags: unknown): string[] {
@@ -7,7 +7,7 @@ function jsonTags(tags: unknown): string[] {
   return [];
 }
 
-export async function getDefaultBoard(): Promise<BoardDTO> {
+export async function getDefaultBoard(prisma: PrismaClient): Promise<BoardDTO> {
   let board = await prisma.board.findFirst({
     orderBy: { createdAt: "asc" },
     include: {

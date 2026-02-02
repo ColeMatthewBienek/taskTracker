@@ -1,14 +1,28 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import type { D1Database } from "@cloudflare/workers-types";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+type PrismaGlobal = { prisma?: PrismaClient };
+const globalForPrisma = globalThis as unknown as PrismaGlobal;
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter: new PrismaBetterSqlite3({
-      url: process.env.DATABASE_URL || "file:./dev.db",
-    }),
-  });
+export type CloudflareEnv = {
+  DB: D1Database;
+};
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+/**
+ * Get a Prisma client.
+ * - In Cloudflare (Pages/Workers): pass { DB } to use the D1 adapter.
+ * - In Node (local dev): call with no args to use the normal Prisma engine + sqlite file.
+ */
+export function getPrisma(env?: Partial<CloudflareEnv>): PrismaClient {
+  if (env?.DB) {
+    return new PrismaClient({
+      adapter: new PrismaD1(env.DB),
+    });
+  }
+
+  // Node/local dev: keep a singleton to avoid exhausting connections.
+  const prisma = globalForPrisma.prisma ?? new PrismaClient();
+  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+  return prisma;
+}

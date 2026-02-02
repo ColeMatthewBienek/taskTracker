@@ -1,5 +1,5 @@
+import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "./db";
 
 export const CreateColumnSchema = z.object({
   boardId: z.string().min(1),
@@ -7,7 +7,7 @@ export const CreateColumnSchema = z.object({
   wipLimit: z.number().int().positive().nullable().optional(),
 });
 
-export async function createColumn(input: unknown) {
+export async function createColumn(prisma: PrismaClient, input: unknown) {
   const data = CreateColumnSchema.parse(input);
   const maxOrder = await prisma.column.aggregate({
     where: { boardId: data.boardId },
@@ -33,7 +33,7 @@ export const UpdateColumnSchema = z.object({
   wipLimit: z.number().int().positive().nullable().optional(),
 });
 
-export async function updateColumn(input: unknown) {
+export async function updateColumn(prisma: PrismaClient, input: unknown) {
   const data = UpdateColumnSchema.parse(input);
   const col = await prisma.column.update({
     where: { id: data.id },
@@ -49,7 +49,7 @@ export const DeleteColumnSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function deleteColumn(input: unknown) {
+export async function deleteColumn(prisma: PrismaClient, input: unknown) {
   const data = DeleteColumnSchema.parse(input);
   // Cascades delete cards + activities via schema relations.
   await prisma.column.delete({ where: { id: data.id } });
@@ -61,7 +61,7 @@ export const ReorderColumnsSchema = z.object({
   orderedColumnIds: z.array(z.string().min(1)).min(1),
 });
 
-export async function reorderColumns(input: unknown) {
+export async function reorderColumns(prisma: PrismaClient, input: unknown) {
   const data = ReorderColumnsSchema.parse(input);
   await prisma.$transaction(
     data.orderedColumnIds.map((id, idx) =>

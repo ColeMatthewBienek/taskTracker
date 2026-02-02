@@ -1,6 +1,5 @@
-import { CardActivityType, Priority } from "@prisma/client";
+import { CardActivityType, Priority, PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "./db";
 import { logActivity } from "./activity";
 
 const TagArray = z.array(z.string()).default([]);
@@ -14,7 +13,7 @@ export const CreateCardSchema = z.object({
   dueDate: z.string().datetime().nullable().optional(),
 });
 
-export async function createCard(input: unknown) {
+export async function createCard(prisma: PrismaClient, input: unknown) {
   const data = CreateCardSchema.parse(input);
 
   const maxOrder = await prisma.card.aggregate({
@@ -36,7 +35,7 @@ export async function createCard(input: unknown) {
     },
   });
 
-  await logActivity({
+  await logActivity(prisma, {
     cardId: card.id,
     type: CardActivityType.CREATED,
     actor: "Cole",
@@ -65,7 +64,7 @@ export const UpdateCardSchema = z.object({
   dueDate: z.string().datetime().nullable().optional(),
 });
 
-export async function updateCard(input: unknown) {
+export async function updateCard(prisma: PrismaClient, input: unknown) {
   const data = UpdateCardSchema.parse(input);
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.id } });
 
@@ -94,7 +93,7 @@ export async function updateCard(input: unknown) {
     }
   }
 
-  await logActivity({
+  await logActivity(prisma, {
     cardId: card.id,
     type: CardActivityType.EDITED,
     actor: "Cole",
@@ -115,7 +114,7 @@ export const MoveCardSchema = z.object({
   orderedCardIdsInFromColumn: z.array(z.string().min(1)).optional(),
 });
 
-export async function moveCard(input: unknown) {
+export async function moveCard(prisma: PrismaClient, input: unknown) {
   const data = MoveCardSchema.parse(input);
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
@@ -194,7 +193,7 @@ export async function moveCard(input: unknown) {
 
   const after = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
-  await logActivity({
+  await logActivity(prisma, {
     cardId: data.cardId,
     type: CardActivityType.MOVED,
     actor: "Cole",
@@ -210,7 +209,7 @@ export const ArchiveCardSchema = z.object({
   archived: z.boolean(),
 });
 
-export async function setCardArchived(input: unknown) {
+export async function setCardArchived(prisma: PrismaClient, input: unknown) {
   const data = ArchiveCardSchema.parse(input);
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
@@ -250,7 +249,7 @@ export async function setCardArchived(input: unknown) {
     });
   });
 
-  await logActivity({
+  await logActivity(prisma, {
     cardId: card.id,
     type: data.archived ? CardActivityType.ARCHIVED : CardActivityType.UNARCHIVED,
     actor: "Cole",

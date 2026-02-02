@@ -1,13 +1,15 @@
-import { CardActivityType } from "@prisma/client";
-import { prisma } from "./db";
+import { CardActivityType, PrismaClient } from "@prisma/client";
 
-export async function logActivity(params: {
-  cardId: string;
-  type: CardActivityType;
-  actor: string;
-  before?: any;
-  after?: any;
-}) {
+export async function logActivity(
+  prisma: PrismaClient,
+  params: {
+    cardId: string;
+    type: CardActivityType;
+    actor: string;
+    before?: any;
+    after?: any;
+  }
+) {
   const { cardId, type, actor, before, after } = params;
   return prisma.cardActivity.create({
     data: {

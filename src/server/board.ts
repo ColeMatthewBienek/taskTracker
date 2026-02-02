@@ -7,6 +7,16 @@ function jsonTags(tags: unknown): string[] {
   return [];
 }
 
+function toIsoOrNull(value: unknown): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
+  }
+  return null;
+}
+
 export async function getDefaultBoard(prisma: PrismaClient): Promise<BoardDTO> {
   let board = await prisma.board.findFirst({
     orderBy: { createdAt: "asc" },
@@ -58,10 +68,10 @@ export async function getDefaultBoard(prisma: PrismaClient): Promise<BoardDTO> {
         description: card.description,
         tags: jsonTags(card.tags),
         priority: card.priority,
-        dueDate: card.dueDate ? card.dueDate.toISOString() : null,
+        dueDate: toIsoOrNull(card.dueDate),
         archived: card.archived,
-        createdAt: card.createdAt.toISOString(),
-        updatedAt: card.updatedAt.toISOString(),
+        createdAt: toIsoOrNull(card.createdAt) ?? new Date().toISOString(),
+        updatedAt: toIsoOrNull(card.updatedAt) ?? new Date().toISOString(),
         columnId: card.columnId,
         order: card.order,
       })),

@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const { env } = getRequestContext<CloudflareEnv>();
   const prisma = getPrisma(env);
 
-  const body = await req.json();
+  const body: any = await req.json();
   const card = await createCard(prisma, body);
   return NextResponse.json(card);
 }
@@ -18,7 +18,7 @@ export async function PATCH(req: Request) {
   const { env } = getRequestContext<CloudflareEnv>();
   const prisma = getPrisma(env);
 
-  const body = await req.json();
+  const body: any = await req.json();
 
   if (body?.cardId && typeof body.archived === "boolean") {
     const card = await setCardArchived(prisma, body);

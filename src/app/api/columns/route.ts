@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const { env } = getRequestContext<CloudflareEnv>();
   const prisma = getPrisma(env);
 
-  const body = await req.json();
+  const body: any = await req.json();
   const col = await createColumn(prisma, body);
   return NextResponse.json(col);
 }
@@ -18,7 +18,7 @@ export async function PATCH(req: Request) {
   const { env } = getRequestContext<CloudflareEnv>();
   const prisma = getPrisma(env);
 
-  const body = await req.json();
+  const body: any = await req.json();
   if (body?.orderedColumnIds) {
     const res = await reorderColumns(prisma, body);
     return NextResponse.json(res);
@@ -31,7 +31,7 @@ export async function DELETE(req: Request) {
   const { env } = getRequestContext<CloudflareEnv>();
   const prisma = getPrisma(env);
 
-  const body = await req.json();
+  const body: any = await req.json();
   const res = await deleteColumn(prisma, body);
   return NextResponse.json(res);
 }

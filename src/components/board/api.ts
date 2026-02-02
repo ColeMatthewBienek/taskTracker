@@ -3,7 +3,7 @@ import type { BoardDTO } from "@/server/types";
 export async function fetchBoard(): Promise<BoardDTO> {
   const res = await fetch("/api/board", { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load board");
-  return res.json();
+  return (await res.json()) as BoardDTO;
 }
 
 export async function createColumn(boardId: string, name: string) {
@@ -13,7 +13,7 @@ export async function createColumn(boardId: string, name: string) {
     body: JSON.stringify({ boardId, name }),
   });
   if (!res.ok) throw new Error("Failed to create column");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function reorderColumns(boardId: string, orderedColumnIds: string[]) {
@@ -23,7 +23,7 @@ export async function reorderColumns(boardId: string, orderedColumnIds: string[]
     body: JSON.stringify({ boardId, orderedColumnIds }),
   });
   if (!res.ok) throw new Error("Failed to reorder columns");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function updateColumn(payload: { id: string; name?: string; wipLimit?: number | null }) {
@@ -33,7 +33,7 @@ export async function updateColumn(payload: { id: string; name?: string; wipLimi
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Failed to update column");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function deleteColumn(id: string) {
@@ -43,7 +43,7 @@ export async function deleteColumn(id: string) {
     body: JSON.stringify({ id }),
   });
   if (!res.ok) throw new Error("Failed to delete column");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function createCard(payload: {
@@ -60,7 +60,7 @@ export async function createCard(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Failed to create card");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function updateCard(payload: {
@@ -77,7 +77,7 @@ export async function updateCard(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Failed to update card");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function moveCard(payload: {
@@ -93,7 +93,7 @@ export async function moveCard(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Failed to move card");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function setCardArchived(cardId: string, archived: boolean) {
@@ -103,11 +103,11 @@ export async function setCardArchived(cardId: string, archived: boolean) {
     body: JSON.stringify({ cardId, archived }),
   });
   if (!res.ok) throw new Error("Failed to archive card");
-  return res.json();
+  return (await res.json()) as any;
 }
 
 export async function fetchCardActivity(cardId: string) {
   const res = await fetch(`/api/cards/${cardId}/activity`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load activity");
-  return res.json();
+  return (await res.json()) as any;
 }

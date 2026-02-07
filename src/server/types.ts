@@ -2,6 +2,17 @@ import { Priority } from "@prisma/client";
 
 export type CardTag = string;
 
+export type ProjectDTO = {
+  id: string;
+  boardId: string;
+  name: string;
+  keyPrefix: string;
+  description: string;
+  nextSeq: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type CardDTO = {
   id: string;
   title: string;
@@ -13,6 +24,8 @@ export type CardDTO = {
   createdAt: string;
   updatedAt: string;
   columnId: string;
+  projectId: string | null;
+  keyCode: string | null;
   order: number;
 };
 
@@ -28,6 +41,7 @@ export type ColumnDTO = {
 export type BoardDTO = {
   id: string;
   name: string;
+  projects: ProjectDTO[];
   columns: ColumnDTO[];
 };
 

@@ -28,6 +28,24 @@ model Board {
   updatedAt  DateTime @updatedAt
 
   columns    Column[]
+  projects   Project[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  boardId     String
+  name        String
+  keyPrefix   String
+  description String   @default("")
+  nextSeq     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards       Card[]
+
+  @@index([boardId, name])
+  @@unique([boardId, keyPrefix])
 }
 
 model Column {
@@ -50,6 +68,9 @@ model Card {
   columnId    String
   order       Int
 
+  projectId   String?
+  keyCode     String?
+
   title       String
   description String    @default("")
   tags        Json?     // string[] stored as JSON
@@ -62,11 +83,14 @@ model Card {
   updatedAt   DateTime  @updatedAt
 
   column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
   activities  CardActivity[]
   comments    CardComment[]
 
   @@index([columnId, archived, order])
   @@index([title])
+  @@index([projectId, archived, order])
+  @@unique([projectId, keyCode])
 }
 
 model CardActivity {

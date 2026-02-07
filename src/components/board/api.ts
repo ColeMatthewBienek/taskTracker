@@ -48,6 +48,7 @@ export async function deleteColumn(id: string) {
 
 export async function createCard(payload: {
   columnId: string;
+  projectId?: string;
   title: string;
   description?: string;
   tags?: string[];
@@ -135,5 +136,16 @@ export async function updateCardComment(cardId: string, id: string, body: string
     body: JSON.stringify({ id, body }),
   });
   if (!res.ok) throw new Error("Failed to update comment");
+  return (await res.json()) as any;
+}
+
+
+export async function createProject(payload: { boardId: string; name: string; keyPrefix: string; description?: string }) {
+  const res = await fetch('/api/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to create project');
   return (await res.json()) as any;
 }

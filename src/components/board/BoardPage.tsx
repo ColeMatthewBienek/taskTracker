@@ -7,7 +7,6 @@ export default function BoardPage() {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3">
           <div className="flex items-baseline gap-3">
             <h1 className="text-lg font-semibold tracking-tight">TaskTracker</h1>
-            <span className="text-xs text-zinc-400">local-only</span>
           </div>
         </div>
       </header>

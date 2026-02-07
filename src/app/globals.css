@@ -5,35 +5,36 @@
    document.documentElement.dataset.theme = "nord" | "light"
 */
 :root {
-  /* base */
-  --background: #2e3440; /* nord0 */
-  --foreground: #eceff4; /* nord6 */
+  /* base (darker + very mild purple tint) */
+  --background: #17141f;
+  --foreground: #f2f0ff;
 
   /* app surfaces */
-  --bg0: #2e3440; /* page */
-  --bg1: #3b4252; /* surface */
-  --bg2: #434c5e; /* elevated surface */
+  --bg0: #17141f; /* page */
+  --bg1: #1f1a2a; /* surface */
+  --bg2: #272034; /* elevated surface */
 
-  --border: #4c566a; /* nord3 */
+  --border: #3a3350;
 
-  --text0: #eceff4; /* primary */
-  --text1: #d8dee9; /* secondary */
-  --text2: #a3b1c2; /* muted */
+  --text0: #f2f0ff; /* primary */
+  --text1: #d6d1f0; /* secondary */
+  --text2: #9e96c4; /* muted */
 }
 
 :root[data-theme="light"] {
-  --background: #eceff4;
-  --foreground: #2e3440;
+  /* cleaner light mode */
+  --background: #f7f7fb;
+  --foreground: #191724;
 
-  --bg0: #eceff4;
-  --bg1: #e5e9f0;
-  --bg2: #d8dee9;
+  --bg0: #f7f7fb;
+  --bg1: #ffffff;
+  --bg2: #eeeff6;
 
-  --border: #c8d0df;
+  --border: #d7d9e6;
 
-  --text0: #2e3440;
-  --text1: #3b4252;
-  --text2: #6b778a;
+  --text0: #191724;
+  --text1: #2b2a35;
+  --text2: #66627a;
 }
 
 @theme inline {

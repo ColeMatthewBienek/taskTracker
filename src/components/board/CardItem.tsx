@@ -39,24 +39,24 @@ export default function CardItem({ card, onClick }: { card: CardDTO; onClick: ()
       {...sortable.attributes}
       {...sortable.listeners}
       onClick={onClick}
-      className="group cursor-pointer rounded-md border border-zinc-800 bg-zinc-950/60 px-3 py-2 hover:border-zinc-700"
+      className="group cursor-pointer rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 hover:border-zinc-700"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="truncate text-sm font-medium text-zinc-100">
-            {card.keyCode ? <span className="mr-2 text-zinc-400">[{card.keyCode}]</span> : null}
+          <div className="truncate text-sm font-medium text-[var(--text0)]">
+            {card.keyCode ? <span className="mr-2 text-[var(--text2)]">[{card.keyCode}]</span> : null}
             {card.title}
           </div>
 
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {card.archived ? (
-              <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-300">ARCHIVED</span>
+              <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-[var(--text1)]">ARCHIVED</span>
             ) : null}
 
             {dueLabel ? (
               <span
                 className={`rounded px-1.5 py-0.5 text-[10px] ${
-                  overdue ? "bg-red-500/20 text-red-200" : "bg-zinc-800 text-zinc-200"
+                  overdue ? "bg-red-500/20 text-red-200" : "bg-zinc-800 text-[var(--text0)]"
                 }`}
               >
                 Due {dueLabel}
@@ -65,7 +65,7 @@ export default function CardItem({ card, onClick }: { card: CardDTO; onClick: ()
           </div>
 
           {card.description ? (
-            <div className="mt-1 line-clamp-2 text-xs text-zinc-400">{card.description}</div>
+            <div className="mt-1 line-clamp-2 text-xs text-[var(--text2)]">{card.description}</div>
           ) : null}
         </div>
         <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${priorityColor(card.priority)}`} />
@@ -74,7 +74,7 @@ export default function CardItem({ card, onClick }: { card: CardDTO; onClick: ()
       {(card.tags?.length ?? 0) > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1">
           {card.tags.slice(0, 4).map((t) => (
-            <span key={t} className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-200">
+            <span key={t} className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-[var(--text0)]">
               {t}
             </span>
           ))}

@@ -63,6 +63,7 @@ model Card {
 
   column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
   activities  CardActivity[]
+  comments    CardComment[]
 
   @@index([columnId, archived, order])
   @@index([title])
@@ -80,5 +81,18 @@ model CardActivity {
   card       Card             @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@index([cardId, timestamp])
+}
+
+model CardComment {
+  id        String   @id @default(cuid())
+  cardId    String
+  author    String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, createdAt])
 }
 

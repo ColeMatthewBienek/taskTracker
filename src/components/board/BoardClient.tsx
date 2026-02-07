@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 
@@ -43,6 +43,8 @@ export default function BoardClient() {
   const [showArchived, setShowArchived] = useState(false);
 
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -220,6 +222,52 @@ export default function BoardClient() {
     }).catch(() => {});
   }
 
+  function scrollToColumn(direction: -1 | 1) {
+    const root = scrollRef.current;
+    if (!root) return;
+
+    const cols = Array.from(root.querySelectorAll<HTMLElement>("[data-col-snap]"));
+    if (cols.length === 0) return;
+
+    const rootLeft = root.getBoundingClientRect().left;
+
+    // Find the column whose left edge is closest to the container's left edge
+    let currentIdx = 0;
+    let best = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < cols.length; i++) {
+      const left = cols[i].getBoundingClientRect().left - rootLeft;
+      const dist = Math.abs(left);
+      if (dist < best) {
+        best = dist;
+        currentIdx = i;
+      }
+    }
+
+    const nextIdx = Math.max(0, Math.min(cols.length - 1, currentIdx + direction));
+    cols[nextIdx].scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+  }
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      const tag = (t?.tagName ?? "").toLowerCase();
+      const isTyping = tag === "input" || tag === "textarea" || tag === "select" || (t as any)?.isContentEditable;
+      if (isTyping) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        scrollToColumn(-1);
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        scrollToColumn(1);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -269,18 +317,44 @@ export default function BoardClient() {
         onDragStart={(e) => setActiveId(String(e.active.id))}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-            {filteredBoard.columns.map((col) => (
-              <Column
-                key={col.id}
-                boardId={filteredBoard.id}
-                column={col}
-                onCreateCard={(title) => onCreateCard(col.id, title)}
-                onSelectCard={(id) => selectCard(id)}
-              />
-            ))}
-          </SortableContext>
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center">
+            <button
+              type="button"
+              onClick={() => scrollToColumn(-1)}
+              className="pointer-events-auto ml-1 rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-1 text-xs text-zinc-200 shadow hover:bg-zinc-900"
+              title="Previous column (←)"
+            >
+              ←
+            </button>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
+            <button
+              type="button"
+              onClick={() => scrollToColumn(1)}
+              className="pointer-events-auto mr-1 rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-1 text-xs text-zinc-200 shadow hover:bg-zinc-900"
+              title="Next column (→)"
+            >
+              →
+            </button>
+          </div>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
+          >
+            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+              {filteredBoard.columns.map((col) => (
+                <Column
+                  key={col.id}
+                  boardId={filteredBoard.id}
+                  column={col}
+                  onCreateCard={(title) => onCreateCard(col.id, title)}
+                  onSelectCard={(id) => selectCard(id)}
+                />
+              ))}
+            </SortableContext>
+          </div>
         </div>
 
         <DragOverlay>{activeId ? <CardOverlay id={activeId} /> : null}</DragOverlay>

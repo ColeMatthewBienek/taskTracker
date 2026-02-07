@@ -96,7 +96,8 @@ export default function Column(props: {
         droppable.setNodeRef(node);
       }}
       style={style}
-      className="w-[320px] shrink-0 rounded-lg border border-zinc-800 bg-zinc-900/40"
+      data-col-snap
+      className="w-[320px] shrink-0 snap-start rounded-lg border border-zinc-800 bg-zinc-900/40"
     >
       <div
         className="flex items-center justify-between gap-2 border-b border-zinc-800 px-3 py-2"

@@ -1,8 +1,39 @@
 @import "tailwindcss";
 
+/* Theme tokens
+   Default theme is nord (dark). Toggle by setting:
+   document.documentElement.dataset.theme = "nord" | "light"
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* base */
+  --background: #2e3440; /* nord0 */
+  --foreground: #eceff4; /* nord6 */
+
+  /* app surfaces */
+  --bg0: #2e3440; /* page */
+  --bg1: #3b4252; /* surface */
+  --bg2: #434c5e; /* elevated surface */
+
+  --border: #4c566a; /* nord3 */
+
+  --text0: #eceff4; /* primary */
+  --text1: #d8dee9; /* secondary */
+  --text2: #a3b1c2; /* muted */
+}
+
+:root[data-theme="light"] {
+  --background: #eceff4;
+  --foreground: #2e3440;
+
+  --bg0: #eceff4;
+  --bg1: #e5e9f0;
+  --bg2: #d8dee9;
+
+  --border: #c8d0df;
+
+  --text0: #2e3440;
+  --text1: #3b4252;
+  --text2: #6b778a;
 }
 
 @theme inline {
@@ -10,13 +41,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

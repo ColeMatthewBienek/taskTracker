@@ -23,10 +23,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-50`}
-      >
+    <html lang="en">
+      <head>
+        <script
+          // Set theme ASAP to avoid flash.
+          dangerouslySetInnerHTML={{
+            __html: `(() => {
+  try {
+    const saved = localStorage.getItem('tt.theme');
+    const theme = saved === 'light' ? 'light' : 'nord';
+    document.documentElement.dataset.theme = theme;
+  } catch {}
+})();`,
+          }}
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
     </html>

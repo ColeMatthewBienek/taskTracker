@@ -238,7 +238,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60" />
         <Dialog.Content
-          className="fixed right-0 top-0 h-full w-full max-w-xl border-l border-[var(--border)] bg-zinc-950 p-4 shadow-2xl"
+          className="fixed right-0 top-0 h-full w-full max-w-xl border-l border-[var(--border)] bg-[var(--bg0)] p-4 shadow-2xl"
           onKeyDown={(e) => {
             const isSave = (e.ctrlKey || e.metaKey) && e.key === "Enter";
             if (isSave) {
@@ -323,7 +323,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                           key={t}
                           type="button"
                           onClick={() => setEditTagsArr((arr) => arr.filter((x) => x !== t))}
-                          className="group flex items-center gap-1 rounded bg-zinc-800 px-2 py-1 text-xs text-[var(--text0)] hover:bg-zinc-700"
+                          className="group flex items-center gap-1 rounded bg-[var(--bg2)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg1)]"
                           title="Click to remove"
                         >
                           <span>{t}</span>
@@ -375,7 +375,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                               setEditTagsArr((arr) => (arr.includes(t) ? arr : [...arr, t]));
                               setTagDraft("");
                             }}
-                            className="rounded bg-zinc-800 px-2 py-1 text-[11px] text-[var(--text0)] hover:bg-zinc-700"
+                            className="rounded bg-[var(--bg2)] px-2 py-1 text-[11px] text-[var(--text0)] hover:bg-[var(--bg1)]"
                           >
                             {t}
                           </button>
@@ -390,7 +390,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                     <button
                       onClick={saveEdits}
                       disabled={saving || !editTitle.trim() || !dirty}
-                      className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                      className="rounded-md bg-[var(--bg2)] px-3 py-1.5 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                       title="Ctrl/Cmd + Enter"
                     >
                       {saving ? "Saving…" : dirty ? "Save" : "Saved"}
@@ -495,7 +495,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                                   type="button"
                                   onClick={saveCommentEdit}
                                   disabled={saving || !editingCommentBody.trim()}
-                                  className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                                  className="rounded-md bg-[var(--bg2)] px-3 py-1.5 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                                 >
                                   Save
                                 </button>
@@ -523,7 +523,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                       type="button"
                       onClick={addComment}
                       disabled={saving || !commentDraft.trim()}
-                      className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                      className="rounded-md bg-[var(--bg2)] px-3 py-1.5 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                     >
                       Add comment
                     </button>

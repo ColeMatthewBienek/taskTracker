@@ -113,14 +113,14 @@ export default function Column(props: {
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-zinc-800"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
             title="Column menu"
           >
             …
           </button>
 
           {menuOpen ? (
-            <div className="absolute right-0 top-10 z-20 w-44 rounded-md border border-[var(--border)] bg-zinc-950 p-1 shadow-xl">
+            <div className="absolute right-0 top-10 z-20 w-44 rounded-md border border-[var(--border)] bg-[var(--bg1)] p-1 shadow-xl">
               <button
                 type="button"
                 onClick={startEdit}
@@ -146,7 +146,7 @@ export default function Column(props: {
                 el?.focus();
               }, 0);
             }}
-            className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-[var(--text0)] hover:bg-zinc-700"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg1)]"
           >
             + Card
           </button>
@@ -194,7 +194,7 @@ export default function Column(props: {
                   type="button"
                   disabled={saving}
                   onClick={saveColumnEdits}
-                  className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                  className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-1 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                 >
                   {saving ? "Saving…" : "Save"}
                 </button>
@@ -235,7 +235,7 @@ export default function Column(props: {
               </button>
               <button
                 type="submit"
-                className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-white"
+                className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-1 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)]"
               >
                 Create
               </button>

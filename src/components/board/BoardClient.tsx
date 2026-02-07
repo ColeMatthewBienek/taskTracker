@@ -423,7 +423,7 @@ export default function BoardClient() {
           <button
             type="button"
             onClick={() => scrollToColumn(-1)}
-            className="rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
             title="Previous column (←)"
           >
             ←
@@ -431,7 +431,7 @@ export default function BoardClient() {
           <button
             type="button"
             onClick={() => scrollToColumn(1)}
-            className="rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
             title="Next column (→)"
           >
             →

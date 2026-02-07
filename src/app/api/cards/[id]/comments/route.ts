@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRequestContext } from "@cloudflare/next-on-pages";
 import { z } from "zod";
 import { getPrisma, type CloudflareEnv } from "@/server/db";
+import type { D1Database } from "@cloudflare/workers-types";
 
 export const runtime = "edge";
 
@@ -15,23 +16,28 @@ const UpdateSchema = z.object({
   body: z.string().min(1),
 });
 
-async function ensureCommentsSchema(prisma: ReturnType<typeof getPrisma>) {
+async function ensureCommentsSchema(db: D1Database) {
   // Self-heal for prod: if migrations weren't applied to D1 yet, create the table.
   // Safe to run repeatedly.
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "CardComment" (
-      "id" TEXT NOT NULL PRIMARY KEY,
-      "cardId" TEXT NOT NULL,
-      "author" TEXT NOT NULL,
-      "body" TEXT NOT NULL,
-      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" DATETIME NOT NULL,
-      CONSTRAINT "CardComment_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "Card" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-    );
-  `);
-  await prisma.$executeRawUnsafe(
-    `CREATE INDEX IF NOT EXISTS "CardComment_cardId_createdAt_idx" ON "CardComment"("cardId", "createdAt");`
-  );
+  await db
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS "CardComment" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "cardId" TEXT NOT NULL,
+        "author" TEXT NOT NULL,
+        "body" TEXT NOT NULL,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL,
+        CONSTRAINT "CardComment_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "Card" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+      )`
+    )
+    .run();
+
+  await db
+    .prepare(
+      `CREATE INDEX IF NOT EXISTS "CardComment_cardId_createdAt_idx" ON "CardComment"("cardId", "createdAt")`
+    )
+    .run();
 }
 
 function isMissingCommentsTableError(e: any) {
@@ -65,7 +71,7 @@ export async function GET(
     );
   } catch (e: any) {
     if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema(prisma);
+    await ensureCommentsSchema((env as any).DB as D1Database);
     const comments = await prisma.cardComment.findMany({
       where: { cardId },
       orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
@@ -101,7 +107,7 @@ export async function POST(
     });
   } catch (e: any) {
     if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema(prisma);
+    await ensureCommentsSchema((env as any).DB as D1Database);
     comment = await prisma.cardComment.create({
       data: {
         cardId,
@@ -134,7 +140,7 @@ export async function PATCH(
     existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
   } catch (e: any) {
     if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema(prisma);
+    await ensureCommentsSchema((env as any).DB as D1Database);
     existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
   }
 
@@ -150,7 +156,7 @@ export async function PATCH(
     });
   } catch (e: any) {
     if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema(prisma);
+    await ensureCommentsSchema((env as any).DB as D1Database);
     updated = await prisma.cardComment.update({
       where: { id: data.id },
       data: { body: data.body },

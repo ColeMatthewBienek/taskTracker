@@ -15,6 +15,30 @@ const UpdateSchema = z.object({
   body: z.string().min(1),
 });
 
+async function ensureCommentsSchema(prisma: ReturnType<typeof getPrisma>) {
+  // Self-heal for prod: if migrations weren't applied to D1 yet, create the table.
+  // Safe to run repeatedly.
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CardComment" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "cardId" TEXT NOT NULL,
+      "author" TEXT NOT NULL,
+      "body" TEXT NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL,
+      CONSTRAINT "CardComment_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "Card" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "CardComment_cardId_createdAt_idx" ON "CardComment"("cardId", "createdAt");`
+  );
+}
+
+function isMissingCommentsTableError(e: any) {
+  const msg = String(e?.message ?? e);
+  return msg.includes("no such table") && msg.toLowerCase().includes("cardcomment");
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -26,18 +50,34 @@ export async function GET(
   const url = new URL(req.url);
   const order = (url.searchParams.get("order") ?? "asc").toLowerCase();
 
-  const comments = await prisma.cardComment.findMany({
-    where: { cardId },
-    orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
-  });
+  try {
+    const comments = await prisma.cardComment.findMany({
+      where: { cardId },
+      orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
+    });
 
-  return NextResponse.json(
-    comments.map((c) => ({
-      ...c,
-      createdAt: c.createdAt.toISOString(),
-      updatedAt: c.updatedAt.toISOString(),
-    }))
-  );
+    return NextResponse.json(
+      comments.map((c) => ({
+        ...c,
+        createdAt: c.createdAt.toISOString(),
+        updatedAt: c.updatedAt.toISOString(),
+      }))
+    );
+  } catch (e: any) {
+    if (!isMissingCommentsTableError(e)) throw e;
+    await ensureCommentsSchema(prisma);
+    const comments = await prisma.cardComment.findMany({
+      where: { cardId },
+      orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
+    });
+    return NextResponse.json(
+      comments.map((c) => ({
+        ...c,
+        createdAt: c.createdAt.toISOString(),
+        updatedAt: c.updatedAt.toISOString(),
+      }))
+    );
+  }
 }
 
 export async function POST(
@@ -50,13 +90,26 @@ export async function POST(
 
   const data = CreateSchema.parse(await req.json());
 
-  const comment = await prisma.cardComment.create({
-    data: {
-      cardId,
-      author: data.author,
-      body: data.body,
-    },
-  });
+  let comment;
+  try {
+    comment = await prisma.cardComment.create({
+      data: {
+        cardId,
+        author: data.author,
+        body: data.body,
+      },
+    });
+  } catch (e: any) {
+    if (!isMissingCommentsTableError(e)) throw e;
+    await ensureCommentsSchema(prisma);
+    comment = await prisma.cardComment.create({
+      data: {
+        cardId,
+        author: data.author,
+        body: data.body,
+      },
+    });
+  }
 
   return NextResponse.json({
     ...comment,
@@ -76,15 +129,33 @@ export async function PATCH(
   const data = UpdateSchema.parse(await req.json());
 
   // ensure comment belongs to card
-  const existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
+  let existing;
+  try {
+    existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
+  } catch (e: any) {
+    if (!isMissingCommentsTableError(e)) throw e;
+    await ensureCommentsSchema(prisma);
+    existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
+  }
+
   if (existing.cardId !== cardId) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const updated = await prisma.cardComment.update({
-    where: { id: data.id },
-    data: { body: data.body },
-  });
+  let updated;
+  try {
+    updated = await prisma.cardComment.update({
+      where: { id: data.id },
+      data: { body: data.body },
+    });
+  } catch (e: any) {
+    if (!isMissingCommentsTableError(e)) throw e;
+    await ensureCommentsSchema(prisma);
+    updated = await prisma.cardComment.update({
+      where: { id: data.id },
+      data: { body: data.body },
+    });
+  }
 
   return NextResponse.json({
     ...updated,

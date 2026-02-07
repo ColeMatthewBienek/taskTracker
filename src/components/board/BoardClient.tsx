@@ -135,7 +135,7 @@ export default function BoardClient() {
           if (showArchived && !card.archived) return false;
 
           if (projectId) {
-            if ((card as any).projectId !== projectId) return false;
+            if (card.projectId !== projectId) return false;
           }
 
           if (tag) {
@@ -152,7 +152,7 @@ export default function BoardClient() {
         }),
       })),
     };
-  }, [board, search, tagFilter, showArchived]);
+  }, [board, search, tagFilter, projectFilter, showArchived]);
 
   useEffect(() => {
     // pick first project by default (if any)

@@ -322,44 +322,40 @@ export default function BoardClient() {
         onDragStart={(e) => setActiveId(String(e.active.id))}
         onDragEnd={handleDragEnd}
       >
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center">
-            <button
-              type="button"
-              onClick={() => scrollToColumn(-1)}
-              className="pointer-events-auto ml-1 rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-1 text-xs text-zinc-200 shadow hover:bg-zinc-900"
-              title="Previous column (←)"
-            >
-              ←
-            </button>
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center">
-            <button
-              type="button"
-              onClick={() => scrollToColumn(1)}
-              className="pointer-events-auto mr-1 rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-1 text-xs text-zinc-200 shadow hover:bg-zinc-900"
-              title="Next column (→)"
-            >
-              →
-            </button>
-          </div>
-
-          <div
-            ref={scrollRef}
-            className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory px-10"
+        <div className="flex items-center justify-end gap-2 pb-2">
+          <button
+            type="button"
+            onClick={() => scrollToColumn(-1)}
+            className="rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+            title="Previous column (←)"
           >
-            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-              {filteredBoard.columns.map((col) => (
-                <Column
-                  key={col.id}
-                  boardId={filteredBoard.id}
-                  column={col}
-                  onCreateCard={(title) => onCreateCard(col.id, title)}
-                  onSelectCard={(id) => selectCard(id)}
-                />
-              ))}
-            </SortableContext>
-          </div>
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToColumn(1)}
+            className="rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+            title="Next column (→)"
+          >
+            →
+          </button>
+        </div>
+
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
+        >
+          <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+            {filteredBoard.columns.map((col) => (
+              <Column
+                key={col.id}
+                boardId={filteredBoard.id}
+                column={col}
+                onCreateCard={(title) => onCreateCard(col.id, title)}
+                onSelectCard={(id) => selectCard(id)}
+              />
+            ))}
+          </SortableContext>
         </div>
 
         <DragOverlay>{activeId ? <CardOverlay id={activeId} /> : null}</DragOverlay>

@@ -60,7 +60,7 @@ export default function CardItem({ card, onClick }: { card: CardDTO; onClick: ()
                 className={`rounded px-1.5 py-0.5 text-[10px] ${
                   overdue
                     ? "bg-red-500/20 text-red-200"
-                    : "border border-[var(--border)] bg-[var(--bg2)] text-[var(--text0)]"
+                    : "border border-[var(--border)] bg-[var(--bg2)] text-[var(--text1)]"
                 }`}
               >
                 Due {dueLabel}

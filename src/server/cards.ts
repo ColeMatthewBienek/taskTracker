@@ -69,6 +69,7 @@ export async function createCard(prisma: PrismaClient, input: unknown) {
 
 export const UpdateCardSchema = z.object({
   id: z.string().min(1),
+  projectId: z.string().min(1).nullable().optional(),
   title: z.string().min(1).optional(),
   description: z.string().optional(),
   tags: TagArray.optional(),
@@ -80,9 +81,28 @@ export async function updateCard(prisma: PrismaClient, input: unknown) {
   const data = UpdateCardSchema.parse(input);
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.id } });
 
+  // If assigning/moving projects, allocate a keyCode if missing (or if project changes).
+  let nextKeyCode: string | undefined;
+  let nextProjectId: string | null | undefined;
+  if ((data as any).projectId !== undefined) {
+    nextProjectId = (data as any).projectId;
+    const projectChanged = nextProjectId !== (before as any).projectId;
+    const keyMissing = !(before as any).keyCode;
+    if (nextProjectId && (projectChanged || keyMissing)) {
+      const alloc = await allocateKeyCode(prisma, nextProjectId);
+      nextKeyCode = alloc.keyCode;
+    }
+    if (nextProjectId === null) {
+      // clearing project clears keyCode
+      nextKeyCode = undefined;
+    }
+  }
+
   const card = await prisma.card.update({
     where: { id: data.id },
     data: {
+      ...(nextProjectId !== undefined ? { projectId: nextProjectId } : {}),
+      ...(nextKeyCode !== undefined ? { keyCode: nextKeyCode } : {}),
       ...(data.title !== undefined ? { title: data.title } : {}),
       ...(data.description !== undefined ? { description: data.description } : {}),
       ...(data.tags !== undefined ? { tags: data.tags } : {}),

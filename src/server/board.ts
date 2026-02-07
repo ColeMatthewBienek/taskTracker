@@ -53,9 +53,24 @@ export async function getDefaultBoard(prisma: PrismaClient): Promise<BoardDTO> {
     });
   }
 
+
+  const projects = await prisma.project.findMany({
+    where: { boardId: board.id },
+    orderBy: { createdAt: "asc" },
+  });
   return {
     id: board.id,
     name: board.name,
+    projects: projects.map((p) => ({
+      id: p.id,
+      boardId: p.boardId,
+      name: p.name,
+      keyPrefix: p.keyPrefix,
+      description: p.description ?? "",
+      nextSeq: p.nextSeq,
+      createdAt: toIsoOrNull(p.createdAt) ?? new Date().toISOString(),
+      updatedAt: toIsoOrNull(p.updatedAt) ?? new Date().toISOString(),
+    })),
     columns: board.columns.map((c) => ({
       id: c.id,
       name: c.name,
@@ -73,6 +88,8 @@ export async function getDefaultBoard(prisma: PrismaClient): Promise<BoardDTO> {
         createdAt: toIsoOrNull(card.createdAt) ?? new Date().toISOString(),
         updatedAt: toIsoOrNull(card.updatedAt) ?? new Date().toISOString(),
         columnId: card.columnId,
+        projectId: (card as any).projectId ?? null,
+        keyCode: (card as any).keyCode ?? null,
         order: card.order,
       })),
     })),

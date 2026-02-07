@@ -1,11 +1,13 @@
 import { CardActivityType, Priority, PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { logActivity } from "./activity";
+import { allocateKeyCode } from "./projects";
 
 const TagArray = z.array(z.string()).default([]);
 
 export const CreateCardSchema = z.object({
   columnId: z.string().min(1),
+  projectId: z.string().min(1).optional(),
   title: z.string().min(1),
   description: z.string().optional().default(""),
   tags: TagArray.optional(),
@@ -16,6 +18,12 @@ export const CreateCardSchema = z.object({
 export async function createCard(prisma: PrismaClient, input: unknown) {
   const data = CreateCardSchema.parse(input);
 
+
+  let keyCode: string | null = null;
+  if ((data as any).projectId) {
+    const alloc = await allocateKeyCode(prisma, (data as any).projectId);
+    keyCode = alloc.keyCode;
+  }
   const maxOrder = await prisma.card.aggregate({
     where: { columnId: data.columnId, archived: false },
     _max: { order: true },
@@ -25,6 +33,8 @@ export async function createCard(prisma: PrismaClient, input: unknown) {
   const card = await prisma.card.create({
     data: {
       columnId: data.columnId,
+      projectId: (data as any).projectId ?? null,
+      keyCode,
       order: nextOrder,
       title: data.title,
       description: data.description,
@@ -49,6 +59,8 @@ export async function createCard(prisma: PrismaClient, input: unknown) {
       columnId: card.columnId,
       order: card.order,
       archived: card.archived,
+      projectId: (card as any).projectId ?? null,
+      keyCode: (card as any).keyCode ?? null,
     },
   });
 

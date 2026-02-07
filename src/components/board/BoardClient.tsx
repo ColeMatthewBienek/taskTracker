@@ -8,6 +8,7 @@ import {
   fetchBoard,
   reorderColumns,
   createColumn as apiCreateColumn,
+  createProject as apiCreateProject,
   createCard as apiCreateCard,
   moveCard as apiMoveCard,
 } from "./api";
@@ -40,6 +41,11 @@ export default function BoardClient() {
   const [newColumnName, setNewColumnName] = useState("");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string>("");
+  const [projectFilter, setProjectFilter] = useState<string>("");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectPrefix, setNewProjectPrefix] = useState("");
+  const [newProjectDesc, setNewProjectDesc] = useState("");
+  const [creatingProject, setCreatingProject] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
 
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -118,6 +124,7 @@ export default function BoardClient() {
 
     const q = search.trim().toLowerCase();
     const tag = tagFilter.trim().toLowerCase();
+    const projectId = projectFilter.trim();
 
     return {
       ...board,
@@ -126,6 +133,10 @@ export default function BoardClient() {
         cards: c.cards.filter((card) => {
           if (!showArchived && card.archived) return false;
           if (showArchived && !card.archived) return false;
+
+          if (projectId) {
+            if ((card as any).projectId !== projectId) return false;
+          }
 
           if (tag) {
             const tags = (card.tags || []).map((t) => t.toLowerCase());
@@ -142,6 +153,14 @@ export default function BoardClient() {
       })),
     };
   }, [board, search, tagFilter, showArchived]);
+
+  useEffect(() => {
+    // pick first project by default (if any)
+    if (!board) return;
+    if (board.projects && board.projects.length && !projectFilter) {
+      setProjectFilter(board.projects[0].id);
+    }
+  }, [board, projectFilter]);
 
   const allTags = useMemo(() => {
     if (!board) return [] as string[];
@@ -178,7 +197,7 @@ export default function BoardClient() {
 
   async function onCreateCard(columnId: string, title: string) {
     if (!title.trim()) return;
-    const card = await apiCreateCard({ columnId, title: title.trim() });
+    const card = await apiCreateCard({ columnId, projectId: projectFilter || undefined, title: title.trim() });
     addCardLocal(card);
   }
 
@@ -283,6 +302,27 @@ export default function BoardClient() {
           className="h-9 w-64 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none placeholder:text-zinc-500"
         />
 
+
+        <select
+          value={projectFilter}
+          onChange={(e) => setProjectFilter(e.target.value)}
+          className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-sm"
+        >
+          {(board?.projects ?? []).map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} ({p.keyPrefix})
+            </option>
+          ))}
+        </select>
+
+        <button
+          type="button"
+          onClick={() => setCreatingProject((v) => !v)}
+          className="h-9 rounded-md border border-zinc-800 px-3 text-sm text-zinc-200 hover:bg-zinc-900"
+        >
+          + Project
+        </button>
+
         <select
           value={tagFilter}
           onChange={(e) => setTagFilter(e.target.value)}
@@ -316,6 +356,63 @@ export default function BoardClient() {
           </button>
         </div>
       </div>
+
+
+      {creatingProject ? (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+          <div className="mb-2 text-sm font-medium text-zinc-200">Create project</div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <input
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              placeholder="Name (e.g. TaskTracker)"
+              className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+            />
+            <input
+              value={newProjectPrefix}
+              onChange={(e) => setNewProjectPrefix(e.target.value.toUpperCase())}
+              placeholder="Key prefix (e.g. TASK)"
+              className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+            />
+            <input
+              value={newProjectDesc}
+              onChange={(e) => setNewProjectDesc(e.target.value)}
+              placeholder="Description (optional)"
+              className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+            />
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!board) return;
+                const name = newProjectName.trim();
+                const keyPrefix = newProjectPrefix.trim();
+                if (!name || !keyPrefix) return;
+                const proj = await apiCreateProject({ boardId: board.id, name, keyPrefix, description: newProjectDesc });
+                // re-fetch board to pick up new project list
+                const b = await fetchBoard();
+                setBoard(b);
+                setProjectFilter(proj.id);
+                setNewProjectName("");
+                setNewProjectPrefix("");
+                setNewProjectDesc("");
+                setCreatingProject(false);
+              }}
+              className="h-9 rounded-md bg-zinc-100 px-3 text-sm font-medium text-zinc-900 hover:bg-white"
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreatingProject(false)}
+              className="h-9 rounded-md border border-zinc-800 px-3 text-sm text-zinc-200 hover:bg-zinc-900"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <DndContext
         sensors={sensors}

@@ -419,14 +419,32 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                     >
                       {commentSort === "asc" ? "Oldest → Newest" : "Newest → Oldest"}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setCommentDraft((d) => (d ? d + " 😀" : "😀"))}
-                      className="rounded border border-zinc-800 px-2 py-1 text-[11px] text-zinc-200 hover:bg-zinc-900"
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (!v) return;
+                        setCommentDraft((d) => (d ? d + " " + v : v));
+                        // reset
+                        e.currentTarget.value = "";
+                      }}
+                      className="h-7 rounded border border-zinc-800 bg-zinc-900 px-2 text-[11px] text-zinc-200"
                       title="Insert emoji"
                     >
-                      +😀
-                    </button>
+                      <option value="">+ emoji</option>
+                      <option value="👍">👍 (ack)</option>
+                      <option value="✅">✅ (done)</option>
+                      <option value="❌">❌ (no)</option>
+                      <option value="⚠️">⚠️ (warning)</option>
+                      <option value="🔥">🔥 (hot)</option>
+                      <option value="💡">💡 (idea)</option>
+                      <option value="🤔">🤔 (thinking)</option>
+                      <option value="😂">😂 (lol)</option>
+                      <option value="🎯">🎯 (target)</option>
+                      <option value="🚧">🚧 (blocked)</option>
+                      <option value="🧪">🧪 (test)</option>
+                      <option value="🚀">🚀 (ship)</option>
+                    </select>
                   </div>
                 </div>
 

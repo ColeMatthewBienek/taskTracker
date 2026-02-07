@@ -111,3 +111,29 @@ export async function fetchCardActivity(cardId: string) {
   if (!res.ok) throw new Error("Failed to load activity");
   return (await res.json()) as any;
 }
+
+export async function fetchCardComments(cardId: string, order: "asc" | "desc" = "asc") {
+  const res = await fetch(`/api/cards/${cardId}/comments?order=${order}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load comments");
+  return (await res.json()) as any[];
+}
+
+export async function createCardComment(cardId: string, body: string, author?: string) {
+  const res = await fetch(`/api/cards/${cardId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ body, author }),
+  });
+  if (!res.ok) throw new Error("Failed to create comment");
+  return (await res.json()) as any;
+}
+
+export async function updateCardComment(cardId: string, id: string, body: string) {
+  const res = await fetch(`/api/cards/${cardId}/comments`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, body }),
+  });
+  if (!res.ok) throw new Error("Failed to update comment");
+  return (await res.json()) as any;
+}

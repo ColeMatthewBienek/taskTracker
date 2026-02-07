@@ -4,7 +4,14 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { Priority } from "@prisma/client";
 import type { CardDTO } from "@/server/types";
-import { fetchCardActivity, setCardArchived, updateCard } from "./api";
+import {
+  createCardComment,
+  fetchCardActivity,
+  fetchCardComments,
+  setCardArchived,
+  updateCard,
+  updateCardComment,
+} from "./api";
 import { useBoardStore } from "./state";
 
 function asArray(value: unknown): any[] {
@@ -42,6 +49,12 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
   const { board, upsertCardLocal } = useBoardStore();
   const [activity, setActivity] = useState<any[] | null>(null);
   const [expandedActivity, setExpandedActivity] = useState<Record<string, boolean>>({});
+
+  const [comments, setComments] = useState<any[] | null>(null);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [commentSort, setCommentSort] = useState<"asc" | "desc">("asc");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentBody, setEditingCommentBody] = useState("");
 
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -109,12 +122,22 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
   useEffect(() => {
     if (!cardId) {
       setActivity(null);
+      setComments(null);
+      setCommentDraft("");
+      setCommentSort("asc");
+      setEditingCommentId(null);
+      setEditingCommentBody("");
       setSaveError(null);
       return;
     }
+
     fetchCardActivity(cardId)
       .then(setActivity)
       .catch(() => setActivity([]));
+
+    fetchCardComments(cardId, "asc")
+      .then(setComments)
+      .catch(() => setComments([]));
   }, [cardId]);
 
   // Initialize edit fields when card changes
@@ -159,6 +182,52 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
       setActivity(acts);
     } catch (e: any) {
       setSaveError(e?.message ?? "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function refreshComments(order: "asc" | "desc" = commentSort) {
+    if (!card) return;
+    setCommentSort(order);
+    try {
+      const list = await fetchCardComments(card.id, order);
+      setComments(list);
+    } catch {
+      setComments([]);
+    }
+  }
+
+  async function addComment() {
+    if (!card) return;
+    const body = commentDraft.trim();
+    if (!body) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await createCardComment(card.id, body);
+      setCommentDraft("");
+      await refreshComments(commentSort);
+    } catch (e: any) {
+      setSaveError(e?.message ?? "Failed to add comment");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveCommentEdit() {
+    if (!card || !editingCommentId) return;
+    const body = editingCommentBody.trim();
+    if (!body) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await updateCardComment(card.id, editingCommentId, body);
+      setEditingCommentId(null);
+      setEditingCommentBody("");
+      await refreshComments(commentSort);
+    } catch (e: any) {
+      setSaveError(e?.message ?? "Failed to update comment");
     } finally {
       setSaving(false);
     }
@@ -334,6 +403,129 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                       className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-900"
                     >
                       {card.archived ? "Unarchive" : "Archive"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-medium text-zinc-300">Comments</div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => refreshComments(commentSort === "asc" ? "desc" : "asc")}
+                      className="rounded border border-zinc-800 px-2 py-1 text-[11px] text-zinc-200 hover:bg-zinc-900"
+                    >
+                      {commentSort === "asc" ? "Oldest → Newest" : "Newest → Oldest"}
+                    </button>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (!v) return;
+                        setCommentDraft((d) => (d ? d + " " + v : v));
+                        // reset
+                        e.currentTarget.value = "";
+                      }}
+                      className="h-7 rounded border border-zinc-800 bg-zinc-900 px-2 text-[11px] text-zinc-200"
+                      title="Insert emoji"
+                    >
+                      <option value="">+ emoji</option>
+                      <option value="👍">👍 (ack)</option>
+                      <option value="✅">✅ (done)</option>
+                      <option value="❌">❌ (no)</option>
+                      <option value="⚠️">⚠️ (warning)</option>
+                      <option value="🔥">🔥 (hot)</option>
+                      <option value="💡">💡 (idea)</option>
+                      <option value="🤔">🤔 (thinking)</option>
+                      <option value="😂">😂 (lol)</option>
+                      <option value="🎯">🎯 (target)</option>
+                      <option value="🚧">🚧 (blocked)</option>
+                      <option value="🧪">🧪 (test)</option>
+                      <option value="🚀">🚀 (ship)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-2 space-y-2">
+                  {comments === null ? (
+                    <div className="text-xs text-zinc-500">Loading…</div>
+                  ) : comments.length === 0 ? (
+                    <div className="text-xs text-zinc-500">No comments yet.</div>
+                  ) : (
+                    comments.map((c) => {
+                      const isEditing = editingCommentId === c.id;
+                      return (
+                        <div
+                          key={c.id}
+                          className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-3 text-xs text-zinc-400">
+                            <span className="min-w-0 truncate">
+                              <span className="text-zinc-200">{c.author}</span> · {new Date(c.createdAt).toLocaleString()}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isEditing) {
+                                  setEditingCommentId(null);
+                                  setEditingCommentBody("");
+                                } else {
+                                  setEditingCommentId(c.id);
+                                  setEditingCommentBody(c.body ?? "");
+                                }
+                              }}
+                              className="rounded border border-zinc-800 px-2 py-0.5 text-[10px] text-zinc-200 hover:bg-zinc-900"
+                            >
+                              {isEditing ? "Cancel" : "Edit"}
+                            </button>
+                          </div>
+
+                          {isEditing ? (
+                            <div className="mt-2 space-y-2">
+                              <textarea
+                                value={editingCommentBody}
+                                onChange={(e) => setEditingCommentBody(e.target.value)}
+                                rows={3}
+                                className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none"
+                              />
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={saveCommentEdit}
+                                  disabled={saving || !editingCommentBody.trim()}
+                                  className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-2 whitespace-pre-wrap text-sm text-zinc-200">{c.body}</div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="mt-3">
+                  <textarea
+                    value={commentDraft}
+                    onChange={(e) => setCommentDraft(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none"
+                    placeholder="Add a comment…"
+                  />
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={addComment}
+                      disabled={saving || !commentDraft.trim()}
+                      className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                    >
+                      Add comment
                     </button>
                   </div>
                 </div>

@@ -49,39 +49,52 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = getRequestContext<CloudflareEnv>();
-  const prisma = getPrisma(env);
-  const { id: cardId } = await params;
-
-  const url = new URL(req.url);
-  const order = (url.searchParams.get("order") ?? "asc").toLowerCase();
-
   try {
-    const comments = await prisma.cardComment.findMany({
-      where: { cardId },
-      orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
-    });
+    const { env } = getRequestContext<CloudflareEnv>();
+    const prisma = getPrisma(env);
+    const { id: cardId } = await params;
 
-    return NextResponse.json(
-      comments.map((c) => ({
-        ...c,
-        createdAt: c.createdAt.toISOString(),
-        updatedAt: c.updatedAt.toISOString(),
-      }))
-    );
+    const url = new URL(req.url);
+    const order = (url.searchParams.get("order") ?? "asc").toLowerCase();
+
+    try {
+      const comments = await prisma.cardComment.findMany({
+        where: { cardId },
+        orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
+      });
+
+      return NextResponse.json(
+        comments.map((c) => ({
+          ...c,
+          createdAt: c.createdAt.toISOString(),
+          updatedAt: c.updatedAt.toISOString(),
+        }))
+      );
+    } catch (e: any) {
+      if (!isMissingCommentsTableError(e)) throw e;
+      await ensureCommentsSchema((env as any).DB as D1Database);
+      const comments = await prisma.cardComment.findMany({
+        where: { cardId },
+        orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
+      });
+      return NextResponse.json(
+        comments.map((c) => ({
+          ...c,
+          createdAt: c.createdAt.toISOString(),
+          updatedAt: c.updatedAt.toISOString(),
+        }))
+      );
+    }
   } catch (e: any) {
-    if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema((env as any).DB as D1Database);
-    const comments = await prisma.cardComment.findMany({
-      where: { cardId },
-      orderBy: { createdAt: order === "desc" ? "desc" : "asc" },
-    });
+    // Debuggable error payload (avoid leaking env/secrets)
     return NextResponse.json(
-      comments.map((c) => ({
-        ...c,
-        createdAt: c.createdAt.toISOString(),
-        updatedAt: c.updatedAt.toISOString(),
-      }))
+      {
+        error: "comments_get_failed",
+        name: e?.name ?? null,
+        message: String(e?.message ?? e),
+        cause: e?.cause ? String(e.cause) : null,
+      },
+      { status: 500 }
     );
   }
 }
@@ -90,82 +103,106 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = getRequestContext<CloudflareEnv>();
-  const prisma = getPrisma(env);
-  const { id: cardId } = await params;
-
-  const data = CreateSchema.parse(await req.json());
-
-  let comment;
   try {
-    comment = await prisma.cardComment.create({
-      data: {
-        cardId,
-        author: data.author,
-        body: data.body,
-      },
+    const { env } = getRequestContext<CloudflareEnv>();
+    const prisma = getPrisma(env);
+    const { id: cardId } = await params;
+
+    const data = CreateSchema.parse(await req.json());
+
+    let comment;
+    try {
+      comment = await prisma.cardComment.create({
+        data: {
+          cardId,
+          author: data.author,
+          body: data.body,
+        },
+      });
+    } catch (e: any) {
+      if (!isMissingCommentsTableError(e)) throw e;
+      await ensureCommentsSchema((env as any).DB as D1Database);
+      comment = await prisma.cardComment.create({
+        data: {
+          cardId,
+          author: data.author,
+          body: data.body,
+        },
+      });
+    }
+
+    return NextResponse.json({
+      ...comment,
+      createdAt: comment.createdAt.toISOString(),
+      updatedAt: comment.updatedAt.toISOString(),
     });
   } catch (e: any) {
-    if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema((env as any).DB as D1Database);
-    comment = await prisma.cardComment.create({
-      data: {
-        cardId,
-        author: data.author,
-        body: data.body,
+    return NextResponse.json(
+      {
+        error: "comment_create_failed",
+        name: e?.name ?? null,
+        message: String(e?.message ?? e),
+        cause: e?.cause ? String(e.cause) : null,
       },
-    });
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({
-    ...comment,
-    createdAt: comment.createdAt.toISOString(),
-    updatedAt: comment.updatedAt.toISOString(),
-  });
 }
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env } = getRequestContext<CloudflareEnv>();
-  const prisma = getPrisma(env);
-  const { id: cardId } = await params;
-
-  const data = UpdateSchema.parse(await req.json());
-
-  // ensure comment belongs to card
-  let existing;
   try {
-    existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
-  } catch (e: any) {
-    if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema((env as any).DB as D1Database);
-    existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
-  }
+    const { env } = getRequestContext<CloudflareEnv>();
+    const prisma = getPrisma(env);
+    const { id: cardId } = await params;
 
-  if (existing.cardId !== cardId) {
-    return new NextResponse("Not found", { status: 404 });
-  }
+    const data = UpdateSchema.parse(await req.json());
 
-  let updated;
-  try {
-    updated = await prisma.cardComment.update({
-      where: { id: data.id },
-      data: { body: data.body },
+    // ensure comment belongs to card
+    let existing;
+    try {
+      existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
+    } catch (e: any) {
+      if (!isMissingCommentsTableError(e)) throw e;
+      await ensureCommentsSchema((env as any).DB as D1Database);
+      existing = await prisma.cardComment.findUniqueOrThrow({ where: { id: data.id } });
+    }
+
+    if (existing.cardId !== cardId) {
+      return new NextResponse("Not found", { status: 404 });
+    }
+
+    let updated;
+    try {
+      updated = await prisma.cardComment.update({
+        where: { id: data.id },
+        data: { body: data.body },
+      });
+    } catch (e: any) {
+      if (!isMissingCommentsTableError(e)) throw e;
+      await ensureCommentsSchema((env as any).DB as D1Database);
+      updated = await prisma.cardComment.update({
+        where: { id: data.id },
+        data: { body: data.body },
+      });
+    }
+
+    return NextResponse.json({
+      ...updated,
+      createdAt: updated.createdAt.toISOString(),
+      updatedAt: updated.updatedAt.toISOString(),
     });
   } catch (e: any) {
-    if (!isMissingCommentsTableError(e)) throw e;
-    await ensureCommentsSchema((env as any).DB as D1Database);
-    updated = await prisma.cardComment.update({
-      where: { id: data.id },
-      data: { body: data.body },
-    });
+    return NextResponse.json(
+      {
+        error: "comment_update_failed",
+        name: e?.name ?? null,
+        message: String(e?.message ?? e),
+        cause: e?.cause ? String(e.cause) : null,
+      },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({
-    ...updated,
-    createdAt: updated.createdAt.toISOString(),
-    updatedAt: updated.updatedAt.toISOString(),
-  });
 }

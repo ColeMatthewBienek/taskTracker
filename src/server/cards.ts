@@ -118,78 +118,77 @@ export async function moveCard(prisma: PrismaClient, input: unknown) {
   const data = MoveCardSchema.parse(input);
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
-  await prisma.$transaction(async (tx) => {
-    // Move card first
-    await tx.card.update({
-      where: { id: data.cardId },
-      data: { columnId: data.toColumnId },
-    });
+  // NOTE: D1 doesn't support transactions, so we run queries individually.
+  // Move card first
+  await prisma.card.update({
+    where: { id: data.cardId },
+    data: { columnId: data.toColumnId },
+  });
 
-    // Reorder helper: take a desired ordering list, intersect with actual ids, de-dupe,
-    // then append any missing ids (by current order) so we always end up with a total ordering.
-    function normalizeOrder(params: {
-      desiredIds: string[] | undefined;
-      actualIdsInOrder: string[];
-    }) {
-      const { desiredIds, actualIdsInOrder } = params;
-      const actual = new Set(actualIdsInOrder);
+  // Reorder helper: take a desired ordering list, intersect with actual ids, de-dupe,
+  // then append any missing ids (by current order) so we always end up with a total ordering.
+  function normalizeOrder(params: {
+    desiredIds: string[] | undefined;
+    actualIdsInOrder: string[];
+  }) {
+    const { desiredIds, actualIdsInOrder } = params;
+    const actual = new Set(actualIdsInOrder);
 
-      const out: string[] = [];
-      const seen = new Set<string>();
+    const out: string[] = [];
+    const seen = new Set<string>();
 
-      if (desiredIds && desiredIds.length) {
-        for (const id of desiredIds) {
-          if (!actual.has(id)) continue;
-          if (seen.has(id)) continue;
-          seen.add(id);
-          out.push(id);
-        }
-      }
-
-      for (const id of actualIdsInOrder) {
+    if (desiredIds && desiredIds.length) {
+      for (const id of desiredIds) {
+        if (!actual.has(id)) continue;
         if (seen.has(id)) continue;
+        seen.add(id);
         out.push(id);
       }
-
-      return out;
     }
 
-    // Target column: normalize ordering for ACTIVE (non-archived) cards only.
-    const toCards = await tx.card.findMany({
-      where: { columnId: data.toColumnId, archived: false },
-      orderBy: { order: "asc" },
-    });
-
-    const finalToIds = normalizeOrder({
-      desiredIds: data.orderedCardIdsInToColumn,
-      actualIdsInOrder: toCards.map((c) => c.id),
-    });
-
-    for (let i = 0; i < finalToIds.length; i++) {
-      const id = finalToIds[i];
-      if (toCards[i]?.id === id && toCards[i]?.order === i) continue;
-      await tx.card.update({ where: { id }, data: { order: i } });
+    for (const id of actualIdsInOrder) {
+      if (seen.has(id)) continue;
+      out.push(id);
     }
 
-    // Source column: always normalize too (close gaps). Use provided ordering if present.
-    const fromCards = await tx.card.findMany({
-      where: { columnId: data.fromColumnId, archived: false },
-      orderBy: { order: "asc" },
-    });
+    return out;
+  }
 
-    const fromActualIds = fromCards.map((c) => c.id).filter((id) => id !== data.cardId);
-
-    const finalFromIds = normalizeOrder({
-      desiredIds: data.orderedCardIdsInFromColumn,
-      actualIdsInOrder: fromActualIds,
-    });
-
-    for (let i = 0; i < finalFromIds.length; i++) {
-      const id = finalFromIds[i];
-      if (fromCards[i]?.id === id && fromCards[i]?.order === i) continue;
-      await tx.card.update({ where: { id }, data: { order: i } });
-    }
+  // Target column: normalize ordering for ACTIVE (non-archived) cards only.
+  const toCards = await prisma.card.findMany({
+    where: { columnId: data.toColumnId, archived: false },
+    orderBy: { order: "asc" },
   });
+
+  const finalToIds = normalizeOrder({
+    desiredIds: data.orderedCardIdsInToColumn,
+    actualIdsInOrder: toCards.map((c) => c.id),
+  });
+
+  for (let i = 0; i < finalToIds.length; i++) {
+    const id = finalToIds[i];
+    if (toCards[i]?.id === id && toCards[i]?.order === i) continue;
+    await prisma.card.update({ where: { id }, data: { order: i } });
+  }
+
+  // Source column: always normalize too (close gaps). Use provided ordering if present.
+  const fromCards = await prisma.card.findMany({
+    where: { columnId: data.fromColumnId, archived: false },
+    orderBy: { order: "asc" },
+  });
+
+  const fromActualIds = fromCards.map((c) => c.id).filter((id) => id !== data.cardId);
+
+  const finalFromIds = normalizeOrder({
+    desiredIds: data.orderedCardIdsInFromColumn,
+    actualIdsInOrder: fromActualIds,
+  });
+
+  for (let i = 0; i < finalFromIds.length; i++) {
+    const id = finalFromIds[i];
+    if (fromCards[i]?.id === id && fromCards[i]?.order === i) continue;
+    await prisma.card.update({ where: { id }, data: { order: i } });
+  }
 
   const after = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
@@ -213,41 +212,40 @@ export async function setCardArchived(prisma: PrismaClient, input: unknown) {
   const data = ArchiveCardSchema.parse(input);
   const before = await prisma.card.findUniqueOrThrow({ where: { id: data.cardId } });
 
-  const card = await prisma.$transaction(async (tx) => {
-    if (data.archived) {
-      // Archive the card, then close gaps in the active ordering for that column.
-      const updated = await tx.card.update({
-        where: { id: data.cardId },
-        data: { archived: true },
-      });
+  // NOTE: D1 doesn't support transactions, so we run queries individually.
+  let card;
 
-      const remaining = await tx.card.findMany({
-        where: { columnId: before.columnId, archived: false },
-        orderBy: { order: "asc" },
-      });
+  if (data.archived) {
+    // Archive the card, then close gaps in the active ordering for that column.
+    card = await prisma.card.update({
+      where: { id: data.cardId },
+      data: { archived: true },
+    });
 
-      for (let i = 0; i < remaining.length; i++) {
-        if (remaining[i].order !== i) {
-          await tx.card.update({ where: { id: remaining[i].id }, data: { order: i } });
-        }
+    const remaining = await prisma.card.findMany({
+      where: { columnId: before.columnId, archived: false },
+      orderBy: { order: "asc" },
+    });
+
+    for (let i = 0; i < remaining.length; i++) {
+      if (remaining[i].order !== i) {
+        await prisma.card.update({ where: { id: remaining[i].id }, data: { order: i } });
       }
-
-      return updated;
     }
-
+  } else {
     // Unarchive: put card at end of active list (max+1) to avoid collisions.
-    const maxOrder = await tx.card.aggregate({
+    const maxOrder = await prisma.card.aggregate({
       where: { columnId: before.columnId, archived: false },
       _max: { order: true },
     });
 
     const nextOrder = (maxOrder._max.order ?? -1) + 1;
 
-    return tx.card.update({
+    card = await prisma.card.update({
       where: { id: data.cardId },
       data: { archived: false, order: nextOrder },
     });
-  });
+  }
 
   await logActivity(prisma, {
     cardId: card.id,

@@ -238,7 +238,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60" />
         <Dialog.Content
-          className="fixed right-0 top-0 h-full w-full max-w-xl border-l border-zinc-800 bg-zinc-950 p-4 shadow-2xl"
+          className="fixed right-0 top-0 h-full w-full max-w-xl border-l border-[var(--border)] bg-[var(--bg0)] p-4 shadow-2xl"
           onKeyDown={(e) => {
             const isSave = (e.ctrlKey || e.metaKey) && e.key === "Enter";
             if (isSave) {
@@ -252,46 +252,46 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
               <Dialog.Title className="truncate text-lg font-semibold">
                 {card?.title ?? "Card"}
               </Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-zinc-400">
+              <Dialog.Description className="mt-1 text-sm text-[var(--text2)]">
                 {card ? "Card details" : ""}
               </Dialog.Description>
             </div>
-            <Dialog.Close className="rounded-md border border-zinc-800 px-2 py-1 text-sm text-zinc-200 hover:bg-zinc-900">
+            <Dialog.Close className="rounded-md border border-[var(--border)] px-2 py-1 text-sm text-[var(--text0)] hover:bg-[var(--bg2)]">
               Close
             </Dialog.Close>
           </div>
 
           {card ? (
             <div className="mt-4 space-y-4">
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg1)] p-3">
                 <div className="grid gap-3">
                   <div>
-                    <div className="text-xs font-medium text-zinc-300">Title</div>
+                    <div className="text-xs font-medium text-[var(--text1)]">Title</div>
                     <input
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="mt-2 h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+                      className="mt-2 h-9 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm outline-none"
                     />
                   </div>
 
                   <div>
-                    <div className="text-xs font-medium text-zinc-300">Description</div>
+                    <div className="text-xs font-medium text-[var(--text1)]">Description</div>
                     <textarea
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       rows={5}
-                      className="mt-2 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none"
+                      className="mt-2 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm outline-none"
                       placeholder="Details…"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-xs font-medium text-zinc-300">Priority</div>
+                      <div className="text-xs font-medium text-[var(--text1)]">Priority</div>
                       <select
                         value={editPriority}
                         onChange={(e) => setEditPriority(e.target.value as Priority)}
-                        className="mt-2 h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-2 text-sm"
+                        className="mt-2 h-9 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 text-sm"
                       >
                         <option value={Priority.LOW}>LOW</option>
                         <option value={Priority.MEDIUM}>MEDIUM</option>
@@ -301,33 +301,33 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                     </div>
 
                     <div>
-                      <div className="text-xs font-medium text-zinc-300">Due date</div>
+                      <div className="text-xs font-medium text-[var(--text1)]">Due date</div>
                       <input
                         type="datetime-local"
                         value={editDueDate}
                         onChange={(e) => setEditDueDate(e.target.value)}
-                        className="mt-2 h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-2 text-sm"
+                        className="mt-2 h-9 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 text-sm"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-xs font-medium text-zinc-300">Tags</div>
+                    <div className="text-xs font-medium text-[var(--text1)]">Tags</div>
 
                     <div className="mt-2 flex flex-wrap gap-2">
                       {editTagsArr.length === 0 ? (
-                        <span className="text-xs text-zinc-500">(none)</span>
+                        <span className="text-xs text-[var(--text0)]0">(none)</span>
                       ) : null}
                       {editTagsArr.map((t) => (
                         <button
                           key={t}
                           type="button"
                           onClick={() => setEditTagsArr((arr) => arr.filter((x) => x !== t))}
-                          className="group flex items-center gap-1 rounded bg-zinc-800 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-700"
+                          className="group flex items-center gap-1 rounded bg-[var(--bg2)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg1)]"
                           title="Click to remove"
                         >
                           <span>{t}</span>
-                          <span className="text-zinc-400 group-hover:text-zinc-200">×</span>
+                          <span className="text-[var(--text2)] group-hover:text-[var(--text0)]">×</span>
                         </button>
                       ))}
                     </div>
@@ -354,12 +354,12 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                             setTagDraft("");
                           }
                         }}
-                        className="h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+                        className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm outline-none"
                         placeholder="Add a tag… (Enter or comma)"
                       />
                       <button
                         type="submit"
-                        className="h-9 shrink-0 rounded-md border border-zinc-800 px-3 text-xs text-zinc-200 hover:bg-zinc-900"
+                        className="h-9 shrink-0 rounded-md border border-[var(--border)] px-3 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
                       >
                         Add
                       </button>
@@ -375,7 +375,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                               setEditTagsArr((arr) => (arr.includes(t) ? arr : [...arr, t]));
                               setTagDraft("");
                             }}
-                            className="rounded bg-zinc-800 px-2 py-1 text-[11px] text-zinc-200 hover:bg-zinc-700"
+                            className="rounded bg-[var(--bg2)] px-2 py-1 text-[11px] text-[var(--text0)] hover:bg-[var(--bg1)]"
                           >
                             {t}
                           </button>
@@ -390,17 +390,17 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                     <button
                       onClick={saveEdits}
                       disabled={saving || !editTitle.trim() || !dirty}
-                      className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                      className="rounded-md bg-[var(--bg2)] px-3 py-1.5 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                       title="Ctrl/Cmd + Enter"
                     >
                       {saving ? "Saving…" : dirty ? "Save" : "Saved"}
                     </button>
 
-                    {dirty ? <span className="text-xs text-zinc-400">Unsaved changes</span> : null}
+                    {dirty ? <span className="text-xs text-[var(--text2)]">Unsaved changes</span> : null}
 
                     <button
                       onClick={toggleArchived}
-                      className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-900"
+                      className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg2)]"
                     >
                       {card.archived ? "Unarchive" : "Archive"}
                     </button>
@@ -408,14 +408,14 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                 </div>
               </div>
 
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg1)] p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs font-medium text-zinc-300">Comments</div>
+                  <div className="text-xs font-medium text-[var(--text1)]">Comments</div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => refreshComments(commentSort === "asc" ? "desc" : "asc")}
-                      className="rounded border border-zinc-800 px-2 py-1 text-[11px] text-zinc-200 hover:bg-zinc-900"
+                      className="rounded border border-[var(--border)] px-2 py-1 text-[11px] text-[var(--text0)] hover:bg-[var(--bg2)]"
                     >
                       {commentSort === "asc" ? "Oldest → Newest" : "Newest → Oldest"}
                     </button>
@@ -428,7 +428,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                         // reset
                         e.currentTarget.value = "";
                       }}
-                      className="h-7 rounded border border-zinc-800 bg-zinc-900 px-2 text-[11px] text-zinc-200"
+                      className="h-7 rounded border border-[var(--border)] bg-[var(--bg2)] px-2 text-[11px] text-[var(--text0)]"
                       title="Insert emoji"
                     >
                       <option value="">+ emoji</option>
@@ -450,20 +450,20 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
 
                 <div className="mt-2 space-y-2">
                   {comments === null ? (
-                    <div className="text-xs text-zinc-500">Loading…</div>
+                    <div className="text-xs text-[var(--text0)]0">Loading…</div>
                   ) : comments.length === 0 ? (
-                    <div className="text-xs text-zinc-500">No comments yet.</div>
+                    <div className="text-xs text-[var(--text0)]0">No comments yet.</div>
                   ) : (
                     comments.map((c) => {
                       const isEditing = editingCommentId === c.id;
                       return (
                         <div
                           key={c.id}
-                          className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2 py-2"
+                          className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-2"
                         >
-                          <div className="flex items-center justify-between gap-3 text-xs text-zinc-400">
+                          <div className="flex items-center justify-between gap-3 text-xs text-[var(--text2)]">
                             <span className="min-w-0 truncate">
-                              <span className="text-zinc-200">{c.author}</span> · {new Date(c.createdAt).toLocaleString()}
+                              <span className="text-[var(--text0)]">{c.author}</span> · {new Date(c.createdAt).toLocaleString()}
                             </span>
                             <button
                               type="button"
@@ -476,7 +476,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                                   setEditingCommentBody(c.body ?? "");
                                 }
                               }}
-                              className="rounded border border-zinc-800 px-2 py-0.5 text-[10px] text-zinc-200 hover:bg-zinc-900"
+                              className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--text0)] hover:bg-[var(--bg2)]"
                             >
                               {isEditing ? "Cancel" : "Edit"}
                             </button>
@@ -488,21 +488,21 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                                 value={editingCommentBody}
                                 onChange={(e) => setEditingCommentBody(e.target.value)}
                                 rows={3}
-                                className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none"
+                                className="w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm outline-none"
                               />
                               <div className="flex items-center gap-2">
                                 <button
                                   type="button"
                                   onClick={saveCommentEdit}
                                   disabled={saving || !editingCommentBody.trim()}
-                                  className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                                  className="rounded-md bg-[var(--bg2)] px-3 py-1.5 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                                 >
                                   Save
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <div className="mt-2 whitespace-pre-wrap text-sm text-zinc-200">{c.body}</div>
+                            <div className="mt-2 whitespace-pre-wrap text-sm text-[var(--text0)]">{c.body}</div>
                           )}
                         </div>
                       );
@@ -515,7 +515,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                     value={commentDraft}
                     onChange={(e) => setCommentDraft(e.target.value)}
                     rows={3}
-                    className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none"
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm outline-none"
                     placeholder="Add a comment…"
                   />
                   <div className="mt-2 flex items-center gap-2">
@@ -523,7 +523,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                       type="button"
                       onClick={addComment}
                       disabled={saving || !commentDraft.trim()}
-                      className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                      className="rounded-md bg-[var(--bg2)] px-3 py-1.5 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                     >
                       Add comment
                     </button>
@@ -531,13 +531,13 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                 </div>
               </div>
 
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-                <div className="text-xs font-medium text-zinc-300">Activity</div>
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg1)] p-3">
+                <div className="text-xs font-medium text-[var(--text1)]">Activity</div>
                 <div className="mt-2 space-y-2">
                   {activity === null ? (
-                    <div className="text-xs text-zinc-500">Loading…</div>
+                    <div className="text-xs text-[var(--text0)]0">Loading…</div>
                   ) : activity.length === 0 ? (
-                    <div className="text-xs text-zinc-500">No activity yet.</div>
+                    <div className="text-xs text-[var(--text0)]0">No activity yet.</div>
                   ) : (
                     activity.map((a) => {
                       const isEdited = a.type === "EDITED";
@@ -567,11 +567,11 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                       return (
                         <div
                           key={a.id}
-                          className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2 py-2"
+                          className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-2"
                         >
-                          <div className="flex items-center justify-between gap-3 text-xs text-zinc-400">
+                          <div className="flex items-center justify-between gap-3 text-xs text-[var(--text2)]">
                             <span className="min-w-0 truncate">
-                              <span className="text-zinc-200">{a.actor}</span> · {a.type}
+                              <span className="text-[var(--text0)]">{a.actor}</span> · {a.type}
                             </span>
                             <div className="flex items-center gap-2">
                               <span className="shrink-0">{new Date(a.timestamp).toLocaleString()}</span>
@@ -581,7 +581,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                                   onClick={() =>
                                     setExpandedActivity((m) => ({ ...m, [a.id]: !m[a.id] }))
                                   }
-                                  className="rounded border border-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-200 hover:bg-zinc-900"
+                                  className="rounded border border-[var(--border)] px-1.5 py-0.5 text-[10px] text-[var(--text0)] hover:bg-[var(--bg2)]"
                                 >
                                   {expanded ? "Hide" : "Details"}
                                 </button>
@@ -591,59 +591,59 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
 
                           {isEdited ? (
                             changedEntries.length === 0 ? (
-                              <div className="mt-2 text-xs text-zinc-500">(no field changes)</div>
+                              <div className="mt-2 text-xs text-[var(--text0)]0">(no field changes)</div>
                             ) : (
                               <div className="mt-2 space-y-1">
                                 {changedEntries.map(([k, v]) => (
-                                  <div key={k} className="text-xs text-zinc-300">
-                                    <span className="text-zinc-200">{k}</span>: {formatValue(v?.before)} → {formatValue(v?.after)}
+                                  <div key={k} className="text-xs text-[var(--text1)]">
+                                    <span className="text-[var(--text0)]">{k}</span>: {formatValue(v?.before)} → {formatValue(v?.after)}
                                   </div>
                                 ))}
                               </div>
                             )
                           ) : isMoved ? (
-                            <div className="mt-2 text-xs text-zinc-300">
-                              Moved: <span className="text-zinc-200">{fromColName}</span> →{" "}
-                              <span className="text-zinc-200">{toColName}</span>
+                            <div className="mt-2 text-xs text-[var(--text1)]">
+                              Moved: <span className="text-[var(--text0)]">{fromColName}</span> →{" "}
+                              <span className="text-[var(--text0)]">{toColName}</span>
                             </div>
                           ) : isCreated ? (
-                            <div className="mt-2 space-y-1 text-xs text-zinc-300">
+                            <div className="mt-2 space-y-1 text-xs text-[var(--text1)]">
                               <div>
-                                <span className="text-zinc-200">Title</span>: {formatValue(created?.title)}
+                                <span className="text-[var(--text0)]">Title</span>: {formatValue(created?.title)}
                               </div>
                               <div>
-                                <span className="text-zinc-200">Priority</span>: {formatValue(created?.priority)}
+                                <span className="text-[var(--text0)]">Priority</span>: {formatValue(created?.priority)}
                               </div>
                               {asArray(created?.tags).length > 0 ? (
                                 <div>
-                                  <span className="text-zinc-200">Tags</span>: {asArray(created?.tags).join(", ")}
+                                  <span className="text-[var(--text0)]">Tags</span>: {asArray(created?.tags).join(", ")}
                                 </div>
                               ) : null}
                               {created?.dueDate ? (
                                 <div>
-                                  <span className="text-zinc-200">Due</span>: {formatDueShort(created?.dueDate)}
+                                  <span className="text-[var(--text0)]">Due</span>: {formatDueShort(created?.dueDate)}
                                 </div>
                               ) : null}
                             </div>
                           ) : isArchived ? (
-                            <div className="mt-2 text-xs text-zinc-300">Archived</div>
+                            <div className="mt-2 text-xs text-[var(--text1)]">Archived</div>
                           ) : isUnarchived ? (
-                            <div className="mt-2 text-xs text-zinc-300">Unarchived</div>
+                            <div className="mt-2 text-xs text-[var(--text1)]">Unarchived</div>
                           ) : expanded ? (
                             <>
                               {a.before ? (
-                                <pre className="mt-2 max-h-40 overflow-auto text-[11px] text-zinc-300">
+                                <pre className="mt-2 max-h-40 overflow-auto text-[11px] text-[var(--text1)]">
 {JSON.stringify(a.before, null, 2)}
                                 </pre>
                               ) : null}
                               {a.after ? (
-                                <pre className="mt-2 max-h-40 overflow-auto text-[11px] text-zinc-300">
+                                <pre className="mt-2 max-h-40 overflow-auto text-[11px] text-[var(--text1)]">
 {JSON.stringify(a.after, null, 2)}
                                 </pre>
                               ) : null}
                             </>
                           ) : (
-                            <div className="mt-2 text-xs text-zinc-500">(details hidden)</div>
+                            <div className="mt-2 text-xs text-[var(--text0)]0">(details hidden)</div>
                           )}
                         </div>
                       );
@@ -653,7 +653,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
               </div>
             </div>
           ) : (
-            <div className="mt-6 text-sm text-zinc-400">No card selected.</div>
+            <div className="mt-6 text-sm text-[var(--text2)]">No card selected.</div>
           )}
         </Dialog.Content>
       </Dialog.Portal>

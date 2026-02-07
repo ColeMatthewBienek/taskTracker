@@ -299,14 +299,14 @@ export default function BoardClient() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search…"
-          className="h-9 w-64 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none placeholder:text-zinc-500"
+          className="h-9 w-64 rounded-md border border-[var(--border)] bg-[var(--bg1)] px-3 text-sm text-[var(--text0)] outline-none placeholder:text-[var(--text2)]"
         />
 
 
         <select
           value={projectFilter}
           onChange={(e) => setProjectFilter(e.target.value)}
-          className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-sm"
+          className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 text-sm text-[var(--text0)]"
         >
           {(board?.projects ?? []).map((p) => (
             <option key={p.id} value={p.id}>
@@ -318,7 +318,7 @@ export default function BoardClient() {
         <button
           type="button"
           onClick={() => setCreatingProject((v) => !v)}
-          className="h-9 rounded-md border border-zinc-800 px-3 text-sm text-zinc-200 hover:bg-zinc-900"
+          className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg1)] px-3 text-sm text-[var(--text0)] hover:bg-[var(--bg2)]"
         >
           + Project
         </button>
@@ -326,7 +326,7 @@ export default function BoardClient() {
         <select
           value={tagFilter}
           onChange={(e) => setTagFilter(e.target.value)}
-          className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-sm"
+          className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 text-sm text-[var(--text0)]"
         >
           <option value="">All tags</option>
           {allTags.map((t) => (
@@ -336,7 +336,7 @@ export default function BoardClient() {
           ))}
         </select>
 
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <label className="flex items-center gap-2 text-sm text-[var(--text1)]">
           <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
           Archived only
         </label>
@@ -346,11 +346,11 @@ export default function BoardClient() {
             value={newColumnName}
             onChange={(e) => setNewColumnName(e.target.value)}
             placeholder="New column…"
-            className="h-9 w-48 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none placeholder:text-zinc-500"
+            className="h-9 w-48 rounded-md border border-[var(--border)] bg-[var(--bg1)] px-3 text-sm text-[var(--text0)] outline-none placeholder:text-[var(--text2)]"
           />
           <button
             onClick={onCreateColumn}
-            className="h-9 rounded-md bg-zinc-100 px-3 text-sm font-medium text-zinc-900 hover:bg-white"
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm font-medium text-[var(--text0)] hover:bg-[var(--bg1)]"
           >
             Add column
           </button>
@@ -359,26 +359,26 @@ export default function BoardClient() {
 
 
       {creatingProject ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg1)] p-3">
           <div className="mb-2 text-sm font-medium text-zinc-200">Create project</div>
           <div className="grid gap-2 sm:grid-cols-3">
             <input
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
               placeholder="Name (e.g. TaskTracker)"
-              className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+              className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm text-[var(--text0)] outline-none"
             />
             <input
               value={newProjectPrefix}
               onChange={(e) => setNewProjectPrefix(e.target.value.toUpperCase())}
               placeholder="Key prefix (e.g. TASK)"
-              className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+              className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm text-[var(--text0)] outline-none"
             />
             <input
               value={newProjectDesc}
               onChange={(e) => setNewProjectDesc(e.target.value)}
               placeholder="Description (optional)"
-              className="h-9 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+              className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm text-[var(--text0)] outline-none"
             />
           </div>
           <div className="mt-2 flex items-center gap-2">
@@ -399,14 +399,14 @@ export default function BoardClient() {
                 setNewProjectDesc("");
                 setCreatingProject(false);
               }}
-              className="h-9 rounded-md bg-zinc-100 px-3 text-sm font-medium text-zinc-900 hover:bg-white"
+              className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm font-medium text-[var(--text0)] hover:bg-[var(--bg1)]"
             >
               Create
             </button>
             <button
               type="button"
               onClick={() => setCreatingProject(false)}
-              className="h-9 rounded-md border border-zinc-800 px-3 text-sm text-zinc-200 hover:bg-zinc-900"
+              className="h-9 rounded-md border border-[var(--border)] bg-[var(--bg1)] px-3 text-sm text-[var(--text0)] hover:bg-[var(--bg2)]"
             >
               Cancel
             </button>
@@ -423,7 +423,7 @@ export default function BoardClient() {
           <button
             type="button"
             onClick={() => scrollToColumn(-1)}
-            className="rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
             title="Previous column (←)"
           >
             ←
@@ -431,7 +431,7 @@ export default function BoardClient() {
           <button
             type="button"
             onClick={() => scrollToColumn(1)}
-            className="rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
             title="Next column (→)"
           >
             →

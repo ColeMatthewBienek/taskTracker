@@ -97,41 +97,41 @@ export default function Column(props: {
       }}
       style={style}
       data-col-snap
-      className="w-[320px] shrink-0 snap-start rounded-lg border border-zinc-800 bg-zinc-900/40"
+      className="w-[320px] shrink-0 snap-start rounded-lg border border-[var(--border)] bg-[var(--bg1)]"
     >
       <div
-        className="flex items-center justify-between gap-2 border-b border-zinc-800 px-3 py-2"
+        className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-2"
         {...sortable.attributes}
         {...sortable.listeners}
       >
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{column.name}</div>
-          <div className="text-xs text-zinc-400">{wip}</div>
+          <div className="text-xs text-[var(--text2)]">{wip}</div>
         </div>
 
         <div className="relative flex items-center gap-2">
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            className="rounded-md border border-zinc-800 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-800"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg1)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
             title="Column menu"
           >
             …
           </button>
 
           {menuOpen ? (
-            <div className="absolute right-0 top-10 z-20 w-44 rounded-md border border-zinc-800 bg-zinc-950 p-1 shadow-xl">
+            <div className="absolute right-0 top-10 z-20 w-44 rounded-md border border-[var(--border)] bg-[var(--bg1)] p-1 shadow-xl">
               <button
                 type="button"
                 onClick={startEdit}
-                className="w-full rounded px-2 py-1 text-left text-xs text-zinc-200 hover:bg-zinc-900"
+                className="w-full rounded px-2 py-1 text-left text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
               >
                 Rename / WIP limit
               </button>
               <button
                 type="button"
                 onClick={onDeleteColumn}
-                className="w-full rounded px-2 py-1 text-left text-xs text-red-300 hover:bg-zinc-900"
+                className="w-full rounded px-2 py-1 text-left text-xs text-red-300 hover:bg-[var(--bg2)]"
               >
                 Delete column
               </button>
@@ -146,7 +146,7 @@ export default function Column(props: {
                 el?.focus();
               }, 0);
             }}
-            className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-700"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg1)]"
           >
             + Card
           </button>
@@ -155,24 +155,24 @@ export default function Column(props: {
 
       <div className="space-y-2 p-3">
         {editing ? (
-          <div className="rounded-md border border-zinc-800 bg-zinc-950/50 p-2">
+          <div className="rounded-md border border-[var(--border)] bg-[var(--bg2)] p-2">
             <div className="grid gap-2">
               <div>
-                <div className="text-[11px] font-medium text-zinc-400">Name</div>
+                <div className="text-[11px] font-medium text-[var(--text2)]">Name</div>
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="mt-1 h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+                  className="mt-1 h-9 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm outline-none"
                 />
               </div>
 
               <div>
-                <div className="text-[11px] font-medium text-zinc-400">WIP limit (optional)</div>
+                <div className="text-[11px] font-medium text-[var(--text2)]">WIP limit (optional)</div>
                 <input
                   value={editWip}
                   onChange={(e) => setEditWip(e.target.value)}
                   inputMode="numeric"
-                  className="mt-1 h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
+                  className="mt-1 h-9 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm outline-none"
                   placeholder="e.g. 5"
                 />
               </div>
@@ -186,7 +186,7 @@ export default function Column(props: {
                     setEditing(false);
                     setError(null);
                   }}
-                  className="rounded-md border border-zinc-800 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+                  className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
                 >
                   Cancel
                 </button>
@@ -194,7 +194,7 @@ export default function Column(props: {
                   type="button"
                   disabled={saving}
                   onClick={saveColumnEdits}
-                  className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-white disabled:opacity-50"
+                  className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-1 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
                 >
                   {saving ? "Saving…" : "Save"}
                 </button>
@@ -213,14 +213,14 @@ export default function Column(props: {
               setNewTitle("");
               setCreating(false);
             }}
-            className="rounded-md border border-zinc-800 bg-zinc-950/50 p-2"
+            className="rounded-md border border-[var(--border)] bg-[var(--bg2)] p-2"
           >
             <input
               id={`new-card-${column.id}`}
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Card title…"
-              className="h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none placeholder:text-zinc-500"
+              className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 text-sm outline-none placeholder:text-[var(--text0)]0"
             />
             <div className="mt-2 flex items-center justify-end gap-2">
               <button
@@ -229,13 +229,13 @@ export default function Column(props: {
                   setCreating(false);
                   setNewTitle("");
                 }}
-                className="rounded-md border border-zinc-800 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+                className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--text0)] hover:bg-[var(--bg2)]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-white"
+                className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 py-1 text-xs font-medium text-[var(--text0)] hover:bg-[var(--bg1)]"
               >
                 Create
               </button>
@@ -247,7 +247,7 @@ export default function Column(props: {
           <CardItem key={card.id} card={card} onClick={() => props.onSelectCard(card.id)} />
         ))}
         {column.cards.length === 0 ? (
-          <div className="rounded-md border border-dashed border-zinc-800 px-3 py-6 text-center text-xs text-zinc-500">
+          <div className="rounded-md border border-dashed border-[var(--border)] px-3 py-6 text-center text-xs text-[var(--text0)]0">
             Drop cards here
           </div>
         ) : null}

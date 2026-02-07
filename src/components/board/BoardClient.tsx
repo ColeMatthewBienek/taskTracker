@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 
@@ -47,6 +47,56 @@ export default function BoardClient() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  const scrollToColumn = useCallback((direction: -1 | 1) => {
+    const root = scrollRef.current;
+    if (!root) return;
+
+    const cols = Array.from(root.querySelectorAll<HTMLElement>("[data-col-snap]"));
+    if (cols.length === 0) return;
+
+    const rootLeft = root.getBoundingClientRect().left;
+
+    // Find the column whose left edge is closest to the container's left edge
+    let currentIdx = 0;
+    let best = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < cols.length; i++) {
+      const left = cols[i].getBoundingClientRect().left - rootLeft;
+      const dist = Math.abs(left);
+      if (dist < best) {
+        best = dist;
+        currentIdx = i;
+      }
+    }
+
+    const nextIdx = Math.max(0, Math.min(cols.length - 1, currentIdx + direction));
+    cols[nextIdx].scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+  }, []);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      const tag = (t?.tagName ?? "").toLowerCase();
+      const isTyping =
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        (t as any)?.isContentEditable;
+      if (isTyping) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        scrollToColumn(-1);
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        scrollToColumn(1);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [scrollToColumn]);
 
   useEffect(() => {
     (async () => {
@@ -222,51 +272,6 @@ export default function BoardClient() {
     }).catch(() => {});
   }
 
-  function scrollToColumn(direction: -1 | 1) {
-    const root = scrollRef.current;
-    if (!root) return;
-
-    const cols = Array.from(root.querySelectorAll<HTMLElement>("[data-col-snap]"));
-    if (cols.length === 0) return;
-
-    const rootLeft = root.getBoundingClientRect().left;
-
-    // Find the column whose left edge is closest to the container's left edge
-    let currentIdx = 0;
-    let best = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < cols.length; i++) {
-      const left = cols[i].getBoundingClientRect().left - rootLeft;
-      const dist = Math.abs(left);
-      if (dist < best) {
-        best = dist;
-        currentIdx = i;
-      }
-    }
-
-    const nextIdx = Math.max(0, Math.min(cols.length - 1, currentIdx + direction));
-    cols[nextIdx].scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
-  }
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      const t = e.target as HTMLElement | null;
-      const tag = (t?.tagName ?? "").toLowerCase();
-      const isTyping = tag === "input" || tag === "textarea" || tag === "select" || (t as any)?.isContentEditable;
-      if (isTyping) return;
-
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        scrollToColumn(-1);
-      }
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        scrollToColumn(1);
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   return (
     <div className="space-y-4">

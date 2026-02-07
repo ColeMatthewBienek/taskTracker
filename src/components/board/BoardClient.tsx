@@ -323,7 +323,7 @@ export default function BoardClient() {
         onDragEnd={handleDragEnd}
       >
         <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center">
             <button
               type="button"
               onClick={() => scrollToColumn(-1)}
@@ -333,7 +333,7 @@ export default function BoardClient() {
               ←
             </button>
           </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center">
             <button
               type="button"
               onClick={() => scrollToColumn(1)}
@@ -346,7 +346,7 @@ export default function BoardClient() {
 
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
+            className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory px-10"
           >
             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
               {filteredBoard.columns.map((col) => (

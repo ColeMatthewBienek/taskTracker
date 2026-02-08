@@ -13,6 +13,7 @@ import {
   updateCardComment,
 } from "./api";
 import { useBoardStore } from "./state";
+import { marked } from "marked";
 
 function asArray(value: unknown): any[] {
   return Array.isArray(value) ? value : [];
@@ -58,6 +59,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
 
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [descPreview, setDescPreview] = useState(false);
   const [editTagsArr, setEditTagsArr] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
   const [editPriority, setEditPriority] = useState<Priority>(Priority.MEDIUM);
@@ -108,6 +110,15 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
 
     return JSON.stringify(a) !== JSON.stringify(b);
   }, [card, editTitle, editDescription, editTagsArr, editPriority, editDueDate]);
+  const descriptionHtml = useMemo(() => {
+    const md = editDescription ?? "";
+    try {
+      return marked.parse(md, { breaks: true }) as string;
+    } catch {
+      return String(md);
+    }
+  }, [editDescription]);
+
 
   const tagSuggestions = useMemo(() => {
     const q = tagDraft.trim().toLowerCase();
@@ -275,14 +286,31 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
                   </div>
 
                   <div>
-                    <div className="text-xs font-medium text-[var(--text1)]">Description</div>
-                    <textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      rows={5}
-                      className="mt-2 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm outline-none"
-                      placeholder="Details…"
-                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs font-medium text-[var(--text1)]">Description</div>
+                      <button
+                        type="button"
+                        onClick={() => setDescPreview((v) => !v)}
+                        className="rounded border border-[var(--border)] bg-[var(--bg1)] px-2 py-1 text-[11px] text-[var(--text0)] hover:bg-[var(--bg2)]"
+                      >
+                        {descPreview ? "Edit" : "Preview"}
+                      </button>
+                    </div>
+
+                    {descPreview ? (
+                      <div
+                        className="prose prose-invert mt-2 max-h-60 max-w-none overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm text-[var(--text0)]"
+                        dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                      />
+                    ) : (
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        rows={5}
+                        className="mt-2 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm outline-none"
+                        placeholder="Details… (Markdown supported)"
+                      />
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">

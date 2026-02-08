@@ -3,6 +3,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchBoard } from "@/components/board/api";
 
+type ProjectWithSpec = {
+  id: string;
+  boardId: string;
+  name: string;
+  keyPrefix: string;
+  description: string;
+  spec: null | {
+    id: string;
+    projectId: string;
+    markdown: string;
+    status: "DRAFT" | "SAVED";
+    createdAt: string;
+    updatedAt: string;
+  };
+};
+
 type SaveResponse = {
   project: any;
   spec: any;
@@ -10,6 +26,9 @@ type SaveResponse = {
 
 export default function ProjectBuilderClient() {
   const [boardId, setBoardId] = useState<string | null>(null);
+
+  const [projects, setProjects] = useState<ProjectWithSpec[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   const [projectId, setProjectId] = useState<string | null>(null);
 
@@ -22,15 +41,51 @@ export default function ProjectBuilderClient() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  async function loadProjects(bid: string) {
+    setProjectsLoading(true);
+    try {
+      const res = await fetch(`/api/project-builder?boardId=${encodeURIComponent(bid)}`);
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { projects: ProjectWithSpec[] };
+      setProjects(data.projects ?? []);
+    } finally {
+      setProjectsLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchBoard()
-      .then((b) => setBoardId(b.id))
+      .then((b) => {
+        setBoardId(b.id);
+        loadProjects(b.id).catch(() => {});
+      })
       .catch(() => setBoardId(null));
   }, []);
 
   const canSave = useMemo(() => {
     return !!boardId && !!name.trim() && !!keyPrefix.trim();
   }, [boardId, name, keyPrefix]);
+
+  function applyProject(p: ProjectWithSpec | null) {
+    if (!p) {
+      setProjectId(null);
+      setName("");
+      setKeyPrefix("");
+      setDescription("");
+      setMarkdown("");
+      setStatus(null);
+      setError(null);
+      return;
+    }
+
+    setProjectId(p.id);
+    setName(p.name ?? "");
+    setKeyPrefix(p.keyPrefix ?? "");
+    setDescription(p.description ?? "");
+    setMarkdown(p.spec?.markdown ?? "");
+    setStatus(null);
+    setError(null);
+  }
 
   async function save(mode: "draft" | "save") {
     if (!boardId) return;
@@ -63,6 +118,9 @@ export default function ProjectBuilderClient() {
       setKeyPrefix(data.project.keyPrefix);
       setDescription(data.project.description ?? "");
       setMarkdown(data.spec.markdown ?? "");
+
+      // refresh list so you can re-load immediately
+      await loadProjects(boardId);
     } catch (e: any) {
       setError(e?.message ?? "Failed to save");
     } finally {
@@ -73,7 +131,41 @@ export default function ProjectBuilderClient() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-[var(--border)] bg-[var(--bg1)] p-4">
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="text-xs font-medium text-[var(--text2)]">Load project</div>
+            <select
+              value={projectId ?? ""}
+              disabled={!boardId || projectsLoading}
+              onChange={(e) => {
+                const id = e.target.value || null;
+                const p = id ? projects.find((x) => x.id === id) ?? null : null;
+                applyProject(p);
+              }}
+              className="mt-1 h-9 w-[320px] max-w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-2 text-sm outline-none disabled:opacity-50"
+            >
+              <option value="">(New project)</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.keyPrefix} — {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (boardId) loadProjects(boardId).catch(() => {});
+            }}
+            disabled={!boardId || projectsLoading}
+            className="rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm text-[var(--text0)] hover:bg-[var(--bg1)] disabled:opacity-50"
+          >
+            Refresh
+          </button>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
           <div>
             <div className="text-xs font-medium text-[var(--text2)]">Project name *</div>
             <input
@@ -112,12 +204,7 @@ export default function ProjectBuilderClient() {
             onChange={(e) => setMarkdown(e.target.value)}
             rows={14}
             className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm outline-none"
-            placeholder={`# Problem
-
-# Goals
-
-# Requirements
-`}
+            placeholder={`# Problem\n\n# Goals\n\n# Requirements\n`}
           />
         </div>
 
@@ -143,9 +230,7 @@ export default function ProjectBuilderClient() {
           </button>
         </div>
 
-        <div className="mt-2 text-xs text-[var(--text2)]">
-          * Required fields: project name + key prefix.
-        </div>
+        <div className="mt-2 text-xs text-[var(--text2)]">* Required fields: project name + key prefix.</div>
       </div>
     </div>
   );

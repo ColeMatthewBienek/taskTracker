@@ -54,7 +54,14 @@ export default function BoardHeader() {
 
           {open ? (
             <div className="absolute right-0 top-11 z-20 w-56 rounded-md border border-[var(--border)] bg-[var(--bg1)] p-2 shadow-xl">
-              <div className="px-2 py-1 text-xs font-medium text-[var(--text2)]">Theme</div>
+              <a
+                href="/project-builder"
+                className="block rounded px-2 py-2 text-sm text-[var(--text0)] hover:bg-[var(--bg2)]"
+              >
+                Project Builder
+              </a>
+
+              <div className="mt-1 px-2 py-1 text-xs font-medium text-[var(--text2)]">Theme</div>
               <div className="mt-1 grid gap-1">
                 <button
                   type="button"

@@ -21,6 +21,11 @@ enum CardActivityType {
   UNARCHIVED
 }
 
+enum SpecStatus {
+  DRAFT
+  SAVED
+}
+
 model Board {
   id         String   @id @default(cuid())
   name       String
@@ -43,9 +48,21 @@ model Project {
 
   board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   cards       Card[]
+  spec        ProjectSpec?
 
   @@index([boardId, name])
   @@unique([boardId, keyPrefix])
+}
+
+model ProjectSpec {
+  id          String     @id @default(cuid())
+  projectId   String     @unique
+  markdown    String     @default("")
+  status      SpecStatus @default(DRAFT)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Column {

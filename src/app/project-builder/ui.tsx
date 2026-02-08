@@ -11,6 +11,8 @@ type SaveResponse = {
 export default function ProjectBuilderClient() {
   const [boardId, setBoardId] = useState<string | null>(null);
 
+  const [projectId, setProjectId] = useState<string | null>(null);
+
   const [name, setName] = useState("");
   const [keyPrefix, setKeyPrefix] = useState("");
   const [description, setDescription] = useState("");
@@ -41,6 +43,7 @@ export default function ProjectBuilderClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           boardId,
+          projectId: projectId ?? undefined,
           name: name.trim(),
           keyPrefix: keyPrefix.trim(),
           description,
@@ -54,7 +57,8 @@ export default function ProjectBuilderClient() {
       }
       const data = (await res.json()) as SaveResponse;
       setStatus(mode === "draft" ? "Draft saved" : "Saved");
-      // if saved, normalize returned values
+      // normalize returned values
+      setProjectId(data.project.id);
       setName(data.project.name);
       setKeyPrefix(data.project.keyPrefix);
       setDescription(data.project.description ?? "");
@@ -108,7 +112,12 @@ export default function ProjectBuilderClient() {
             onChange={(e) => setMarkdown(e.target.value)}
             rows={14}
             className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm outline-none"
-            placeholder="# Problem\n\n# Goals\n\n# Requirements\n"
+            placeholder={`# Problem
+
+# Goals
+
+# Requirements
+`}
           />
         </div>
 

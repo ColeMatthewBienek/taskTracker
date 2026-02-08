@@ -32,13 +32,23 @@ export async function saveProjectBuilder(prisma: PrismaClient, input: unknown) {
           description: data.description,
         },
       })
-    : await prisma.project.create({
-        data: {
+    : await prisma.project.upsert({
+        where: {
+          boardId_keyPrefix: {
+            boardId: data.boardId,
+            keyPrefix: data.keyPrefix,
+          },
+        },
+        create: {
           boardId: data.boardId,
           name: data.name,
           keyPrefix: data.keyPrefix,
           description: data.description,
           nextSeq: 1,
+        },
+        update: {
+          name: data.name,
+          description: data.description,
         },
       });
 

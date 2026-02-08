@@ -13,7 +13,6 @@ import {
   updateCardComment,
 } from "./api";
 import { useBoardStore } from "./state";
-import DOMPurify from "dompurify";
 import { marked } from "marked";
 
 function asArray(value: unknown): any[] {
@@ -114,10 +113,9 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
   const descriptionHtml = useMemo(() => {
     const md = editDescription ?? "";
     try {
-      const html = marked.parse(md, { breaks: true }) as string;
-      return DOMPurify.sanitize(html);
+      return marked.parse(md, { breaks: true }) as string;
     } catch {
-      return DOMPurify.sanitize(String(md));
+      return String(md);
     }
   }, [editDescription]);
 

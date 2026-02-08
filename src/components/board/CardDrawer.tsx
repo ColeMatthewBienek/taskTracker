@@ -299,7 +299,7 @@ export default function CardDrawer(props: { cardId: string | null; onClose: () =
 
                     {descPreview ? (
                       <div
-                        className="prose prose-invert mt-2 max-w-none rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm text-[var(--text0)]"
+                        className="prose prose-invert mt-2 max-h-60 max-w-none overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm text-[var(--text0)]"
                         dangerouslySetInnerHTML={{ __html: descriptionHtml }}
                       />
                     ) : (
